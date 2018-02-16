@@ -10,9 +10,6 @@
 %define CLINKSTER_TIMER_OFFSET 2048
 
 %include "music.asm"
-
-global m_memset
-global _m_memset@0
 	
 
 ;; ********** Definitions **********
@@ -48,25 +45,6 @@ extern __imp__waveOutGetPosition@12
 
 %define SAMPLE_RATE 44100
 %define WAVE_SIZE 65536
-
-
-
-
-m_memset:
-_m_memset@0:
-	push    edi; proc uses edi, so save it.
-
-	mov     ecx, [esp + 16]; size_t num
-	mov     al, [esp + 12]; int value
-	mov     edi, [esp + 8]; void * ptr
-	rep     stosb
-
-	mov     eax, [esp + 8]; return pointer
-	pop     edi; restore edi
-	ret; let caller adjust stack
-
-
-
 
 
 ;; ********** Public variables **********

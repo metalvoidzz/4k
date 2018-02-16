@@ -32,14 +32,14 @@ extern "C"
 
 #define DEBUG_BUILD
 
-#include "fn.hh"
 #include "clinkster.h"
+#include "fn.hh"
 
 
 void __stdcall WinMainCRTStartup()
 {
 	Init();
-	Clinkster_GenerateMusic();
+
 	Clinkster_StartMusic();
 
 	while (1)

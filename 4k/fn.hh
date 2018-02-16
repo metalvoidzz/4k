@@ -34,7 +34,6 @@ namespace DEMO
 		GetMessageW(&message, NULL, 0, 0);
 		TranslateMessage(&message);
 		DispatchMessageW(&message);
-		render_gl();
 	}
 };
 
@@ -48,6 +47,8 @@ LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// Make sure to exit process
 	if (uMsg == WM_CHAR && wParam == VK_ESCAPE)
 		DEMO::Die();
+	else if (uMsg == WM_PAINT)
+		render_gl();
 	else if (uMsg == WM_DESTROY)
 		DEMO::Die();
 	else return DefWindowProcW(hWnd, uMsg, wParam, lParam);
@@ -59,7 +60,7 @@ __forceinline void Init()
 	// Init Window
 	{
 		using namespace WINDOW;
-		
+
 		WNDCLASSW wnd;
 
 		wnd.hInstance = GetModuleHandle(NULL);
@@ -74,21 +75,29 @@ __forceinline void Init()
 		wnd.lpszMenuName = NULL;
 
 #ifdef DEBUG_BUILD
-		if(!RegisterClassW(&wnd)) DEMO::Die(ERR_INIT_WINAPI);
+		if (!RegisterClassW(&wnd)) DEMO::Die(ERR_INIT_WINAPI);
 #else
 		RegisterClassW(&wnd);
 #endif
 
 		// Open
+		HMONITOR hmon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
+		MONITORINFO mi = { sizeof(mi) };
+#ifdef DEBUG_BUILD
+		if (!GetMonitorInfo(hmon, &mi)) DEMO::Die(ERR_OPEN_WIN);
+#else
+		GetMonitorInfo(hmon, &mi);
+#endif
+
 		win_handle = CreateWindowW
 		(
 			L"H",
 			L"",
-			0, //flags
-			0,
-			0,
-			WIDTH,
-			HEIGHT,
+			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
+			mi.rcMonitor.left,
+			mi.rcMonitor.top,
+			mi.rcMonitor.right - mi.rcMonitor.left,
+			mi.rcMonitor.bottom - mi.rcMonitor.top,
 			(HWND)NULL,
 			(HMENU)NULL,
 			wnd.hInstance,
@@ -131,9 +140,9 @@ __forceinline void Init()
 		// Show
 		SetWindowPos(win_handle, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 		// No borders
-		LONG lStyle = GetWindowLong(win_handle, GWL_STYLE);
-		lStyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
-		SetWindowLong(win_handle, GWL_STYLE, lStyle);
+		//LONG lStyle = GetWindowLong(win_handle, GWL_STYLE);
+		//lStyle &= ~(WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE);
+		//SetWindowLong(win_handle, GWL_STYLE, lStyle);
 		ShowWindow(win_handle, SW_SHOW);
 #ifdef DEBUG_BUILD
 		SetForegroundWindow(win_handle);
@@ -143,6 +152,9 @@ __forceinline void Init()
 
 	// Init OpenGL
 	init_gl();
+
+	// Init sound
+	Clinkster_GenerateMusic();
 }
 
 
@@ -154,7 +166,7 @@ __forceinline void __fastcall init_gl()
 {
 	using namespace RENDER;
 
-	if(!init_wrangler()) DEMO::Die();
+	if (!init_wrangler()) DEMO::Die();
 
 	// Set aspect
 	glViewport(0, 0, WIDTH, HEIGHT);
@@ -165,9 +177,9 @@ __forceinline void __fastcall init_gl()
 
 	const char* vSrc = shaders[SHADER_VERTEX];
 	const char* pSrc = shaders[SHADER_PIXEL];
-	
-	size_t vLen = sizeof(vSrc);
-	size_t pLen = sizeof(pSrc);
+
+	size_t vLen = sizeof(*vSrc);
+	size_t pLen = sizeof(*pSrc);
 
 	glShaderSource(hVS, 1, &vSrc, (const GLint*)&vLen);
 	glShaderSource(hPX, 1, &pSrc, (const GLint*)&pLen);
@@ -176,7 +188,7 @@ __forceinline void __fastcall init_gl()
 	glCompileShader(hVS);
 	glCompileShader(hPX);
 
-/*#ifdef DEBUG_BUILD
+#ifdef DEBUG_BUILD
 	GLint success[2];
 
 	// Check if successful
@@ -187,17 +199,25 @@ __forceinline void __fastcall init_gl()
 	{
 		// Get gl output
 		GLint logSize = 0;
+		GLchar str[1024];
+
+		// Vertex shader
 		glGetShaderiv(hVS, GL_INFO_LOG_LENGTH, &logSize);
-		GLchar* str[1024];
-		glGetShaderInfoLog(hVS, logSize, &logSize, str[0]);
+		glGetShaderInfoLog(hVS, logSize, &logSize, &str[0]);
 
+		MessageBoxA(WINDOW::win_handle, str, "Vertex shader output", MB_OK);
+		memset(str, NULL, sizeof(str));
+
+		// Pixel shader
 		glGetShaderiv(hPX, GL_INFO_LOG_LENGTH, &logSize);
-		glGetShaderInfoLog(hPX, 0, &logSize, str[0]);
+		glGetShaderInfoLog(hPX, logSize, &logSize, &str[0]);
 
-		DEMO::Die(ERR_SHADER_CMP);
+		MessageBoxA(WINDOW::win_handle, str, "Pixel shader output", MB_OK);
+
+		DEMO::Die();
 	}
 
-#endif*/
+#endif
 
 	// Link shaders
 	hPr = glCreateProgram();
@@ -207,7 +227,7 @@ __forceinline void __fastcall init_gl()
 
 	glLinkProgram(hPr);
 
-/*#ifdef DEBUG_BUILD
+#ifdef DEBUG_BUILD
 	// Check if linking was successful
 	glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
 	glGetShaderiv(hPX, GL_LINK_STATUS, &success[1]);
@@ -215,7 +235,7 @@ __forceinline void __fastcall init_gl()
 	if (!success[0] || !success[1])
 		DEMO::Die(ERR_SHADER_LNK);
 
-#endif*/
+#endif
 
 	// Uniforms
 	DEMO::uLoc[0] = glGetUniformLocation(hPr, "u_time");
@@ -228,12 +248,14 @@ void __fastcall render_gl()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	// Render fullscreen quad
+
+	// Use program
+	glUseProgram(RENDER::hPr);
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-
 	glBegin(GL_QUADS);
-	glColor3f(0.0f, 0.0f, 0.0f);
 	glVertex3f(-1.0f, -1.0f, -1.0f);
 	glVertex3f(1.0f, -1.0f, -1.0f);
 	glVertex3f(1.0f, 1.0f, -1.0f);
