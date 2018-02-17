@@ -19,6 +19,8 @@
 #define ERR_INIT_WR		4
 #define ERR_SHADER_CMP	5
 #define ERR_SHADER_LNK	6
+#define ERR_INIT_SYNC	7
+#define ERR_INIT_BASS	8
 
 static const char* error_msg[] =
 {
@@ -36,6 +38,10 @@ static const char* error_msg[] =
 	"Unable to compile shaders",
 	// Shader link error
 	"Unable to link shaders",
+	// Rocket creation error
+	"Unable to create rocket device",
+	// Init bass error
+	"Unable to init bass",
 };
 
 #endif
@@ -62,7 +68,34 @@ namespace DEMO
 #else
 	__forceinline void __fastcall Die();
 #endif
+
+	float time = 0.0;
 };
+
+
+#ifdef DEBUG_BUILD
+
+#define EXPORT_TRACK_NAME "track.wav"
+
+namespace ROCKET
+{
+	// Sync device
+	sync_device* rocket;
+	// Sync callback
+	sync_cb cb;
+	// Sync tracks
+	const struct sync_track *r;
+	const struct sync_track *g;
+	const struct sync_track *b;
+};
+
+namespace BASS
+{
+	// Bass stream
+	HSTREAM stream;
+};
+
+#endif
 
 
 /* Window defines */
@@ -94,5 +127,10 @@ namespace RENDER
 
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 __forceinline void Init();
-__forceinline void __fastcall init_gl();
 void __fastcall render_gl();
+
+#ifdef DEBUG_BUILD
+void __fastcall init_gl();
+#else
+__forceinline void __fastcall init_gl();
+#endif

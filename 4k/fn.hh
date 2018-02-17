@@ -25,16 +25,6 @@ namespace DEMO
 		ExitProcess(0);
 	}
 #endif
-
-	// Main loop //
-	void __fastcall Loop()
-	{
-		// Handle window events
-		MSG message;
-		GetMessageW(&message, NULL, 0, 0);
-		TranslateMessage(&message);
-		DispatchMessageW(&message);
-	}
 };
 
 
@@ -42,15 +32,49 @@ namespace DEMO
 
 
 // Window callback //
-LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static PAINTSTRUCT ps;
+
 	// Make sure to exit process
+#ifdef DEBUG_BUILD
+	if (uMsg == WM_CHAR)
+	{
+		if (wParam == VK_ESCAPE)
+			DEMO::Die();
+		// Recompile shaders
+		else if (wParam == VK_SPACE)
+		{
+			init_gl();
+			render_gl();
+		}
+	}
+#else
 	if (uMsg == WM_CHAR && wParam == VK_ESCAPE)
 		DEMO::Die();
+#endif
 	else if (uMsg == WM_PAINT)
+	{
 		render_gl();
+		BeginPaint(hWnd, &ps);
+		EndPaint(hWnd, &ps);
+	}
 	else if (uMsg == WM_DESTROY)
 		DEMO::Die();
+	else if (uMsg == WM_TIMER)
+	{
+#ifdef DEBUG_BUILD
+		double row = bass_get_row(BASS::stream);
+		if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
+			DEMO::Die();
+		BASS_Update(0);
+		//Sleep(10);
+#else
+		float pos = Clinkster_GetPosition();
+		if (pos > Clinkster_MusicLength) DEMO::Die();
+		//Sleep(10);
+#endif
+	}
 	else return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
@@ -75,29 +99,30 @@ __forceinline void Init()
 		wnd.lpszMenuName = NULL;
 
 #ifdef DEBUG_BUILD
-		if (!RegisterClassW(&wnd)) DEMO::Die(ERR_INIT_WINAPI);
+		if (!RegisterClassW(&wnd))
+			DEMO::Die(ERR_INIT_WINAPI);
 #else
 		RegisterClassW(&wnd);
 #endif
 
 		// Open
-		HMONITOR hmon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
+/*		HMONITOR hmon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
 		MONITORINFO mi = { sizeof(mi) };
 #ifdef DEBUG_BUILD
 		if (!GetMonitorInfo(hmon, &mi)) DEMO::Die(ERR_OPEN_WIN);
 #else
 		GetMonitorInfo(hmon, &mi);
-#endif
+#endif*/
 
 		win_handle = CreateWindowW
 		(
 			L"H",
 			L"",
 			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
-			mi.rcMonitor.left,
-			mi.rcMonitor.top,
-			mi.rcMonitor.right - mi.rcMonitor.left,
-			mi.rcMonitor.bottom - mi.rcMonitor.top,
+			0,
+			0,
+			WIDTH,
+			HEIGHT,
 			(HWND)NULL,
 			(HMENU)NULL,
 			wnd.hInstance,
@@ -138,7 +163,9 @@ __forceinline void Init()
 		wglMakeCurrent(hDC, hRC);
 
 		// Show
+#ifndef DEBUG_BUILD
 		SetWindowPos(win_handle, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+#endif
 		// No borders
 		//LONG lStyle = GetWindowLong(win_handle, GWL_STYLE);
 		//lStyle &= ~(WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE);
@@ -152,9 +179,6 @@ __forceinline void Init()
 
 	// Init OpenGL
 	init_gl();
-
-	// Init sound
-	Clinkster_GenerateMusic();
 }
 
 
@@ -162,11 +186,16 @@ __forceinline void Init()
 
 
 // Init gl render stuff //
+#ifdef DEBUG_BUILD
+void __fastcall init_gl()
+#else
 __forceinline void __fastcall init_gl()
+#endif
 {
 	using namespace RENDER;
 
-	if (!init_wrangler()) DEMO::Die();
+	if (!init_wrangler())
+		DEMO::Die();
 
 	// Set aspect
 	glViewport(0, 0, WIDTH, HEIGHT);
@@ -175,6 +204,35 @@ __forceinline void __fastcall init_gl()
 	hVS = glCreateShader(GL_VERTEX_SHADER);
 	hPX = glCreateShader(GL_FRAGMENT_SHADER);
 
+#ifdef DEBUG_BUILD
+	p_vshader = fopen(VERTEX_FILE, "r");
+	p_pshader = fopen(PIXEL_FILE, "r");
+	
+	if (p_vshader == NULL || p_pshader == NULL)
+		DEMO::Die(ERR_UNDEFINED);
+
+	// Vertex shader
+	fseek(p_vshader, 0L, SEEK_END);
+	long fsize = ftell(p_vshader);
+	rewind(p_vshader);
+	vBuf = (char*)calloc(1, fsize + 1);
+	fread(vBuf, fsize, 1, p_vshader);
+	fclose(p_vshader);
+
+	// Pixel shader
+	fseek(p_pshader, 0L, SEEK_END);
+	fsize = ftell(p_pshader);
+	rewind(p_pshader);
+	pBuf = (char*)calloc(1, fsize + 1);
+	fread(pBuf, fsize, 1, p_pshader);
+	fclose(p_pshader);
+
+	size_t vLen = strlen(vBuf);
+	size_t pLen = strlen(pBuf);
+
+	glShaderSource(hVS, 1, &vBuf, (const GLint*)&vLen);
+	glShaderSource(hPX, 1, &pBuf, (const GLint*)&pLen);
+#else
 	const char* vSrc = shaders[SHADER_VERTEX];
 	const char* pSrc = shaders[SHADER_PIXEL];
 
@@ -183,6 +241,7 @@ __forceinline void __fastcall init_gl()
 
 	glShaderSource(hVS, 1, &vSrc, (const GLint*)&vLen);
 	glShaderSource(hPX, 1, &pSrc, (const GLint*)&pLen);
+#endif
 
 	// Compile shaders
 	glCompileShader(hVS);
@@ -199,22 +258,23 @@ __forceinline void __fastcall init_gl()
 	{
 		// Get gl output
 		GLint logSize = 0;
-		GLchar str[1024];
+		GLchar* str = (GLchar*)malloc(logSize + 1);
 
 		// Vertex shader
 		glGetShaderiv(hVS, GL_INFO_LOG_LENGTH, &logSize);
 		glGetShaderInfoLog(hVS, logSize, &logSize, &str[0]);
 
 		MessageBoxA(WINDOW::win_handle, str, "Vertex shader output", MB_OK);
-		memset(str, NULL, sizeof(str));
+		free(str);
 
 		// Pixel shader
 		glGetShaderiv(hPX, GL_INFO_LOG_LENGTH, &logSize);
+		str = (GLchar*)malloc(logSize + 1);
 		glGetShaderInfoLog(hPX, logSize, &logSize, &str[0]);
 
 		MessageBoxA(WINDOW::win_handle, str, "Pixel shader output", MB_OK);
 
-		DEMO::Die();
+		//DEMO::Die();
 	}
 
 #endif
@@ -232,10 +292,13 @@ __forceinline void __fastcall init_gl()
 	glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
 	glGetShaderiv(hPX, GL_LINK_STATUS, &success[1]);
 
-	if (!success[0] || !success[1])
-		DEMO::Die(ERR_SHADER_LNK);
+	//if (!success[0] || !success[1])
+	//	DEMO::Die(ERR_SHADER_LNK);
 
 #endif
+
+	// Use program __before__ uniforms are bound
+	glUseProgram(RENDER::hPr);
 
 	// Uniforms
 	DEMO::uLoc[0] = glGetUniformLocation(hPr, "u_time");
@@ -250,9 +313,8 @@ void __fastcall render_gl()
 	// Render fullscreen quad
 
 	// Use program
-	glUseProgram(RENDER::hPr);
 
-	glMatrixMode(GL_MODELVIEW);
+	/*glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
 	glBegin(GL_QUADS);
@@ -261,5 +323,15 @@ void __fastcall render_gl()
 	glVertex3f(1.0f, 1.0f, -1.0f);
 	glVertex3f(-1.0f, 1.0f, -1.0f);
 	glEnd();
-	glPopMatrix();
+	glPopMatrix();*/
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBegin(GL_TRIANGLES);
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glVertex2i(0, 1);
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glVertex2i(-1, -1);
+	glColor3f(0.0f, 0.0f, 1.0f);
+	glVertex2i(1, -1);
+	glEnd();
+	glFlush();
 }

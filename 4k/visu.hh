@@ -5,12 +5,29 @@
 #include "def.hh"
 
 #include <GL/gl.h>
-
 #include <math.h>
+
 
 // Indices //
 #define SHADER_VERTEX	0
 #define SHADER_PIXEL	1
+
+
+
+/* If debug, load shaders from hd */
+#ifdef DEBUG_BUILD
+
+#include <stdio.h>
+
+#define VERTEX_FILE		"vshader.glsl"
+FILE* p_vshader;
+char* vBuf;
+#define PIXEL_FILE		"pshader.glsl"
+FILE* p_pshader;
+char* pBuf;
+
+/* If release, use static shader array */
+#else
 
 // Shader array //
 const char* shaders[] =
@@ -23,7 +40,7 @@ const char* shaders[] =
 
 	"attribute vec2 vertexIn;" \
 	"varying vec2 textureCoord;" \
-	
+
 	// Main
 	"void main() {" \
 	"	gl_Position = vec4(vertexIn.xy,0.0,1.0);" \
@@ -43,6 +60,10 @@ const char* shaders[] =
 	"	gl_FragColor = vec4(0.1,0.0,0.0,1.0);" \
 	"}",
 };
+
+#endif
+
+
 
 
 /* Minimalist extension wrangler

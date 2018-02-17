@@ -1,0 +1,9 @@
+﻿  device.c
+device.c(170): warning C4996: '_strdup': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _strdup. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\string.h(148): note: see declaration of '_strdup'
+device.c(427): warning C4996: '_strdup': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _strdup. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\string.h(148): note: see declaration of '_strdup'
+  track.c
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1357,5): warning MSB8012: TargetPath(C:\Users\Tux\Documents\Visual Studio 2015\Projects\4k\4k\librocket\\lib\librocket.lib) does not match the Library's OutputFile property value (C:\Users\Tux\Documents\Visual Studio 2015\Projects\4k\4k\librocket\lib\librocket-player.lib). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1359,5): warning MSB8012: TargetName(librocket) does not match the Library's OutputFile property value (librocket-player). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+  librocket.vcxproj -> C:\Users\Tux\Documents\Visual Studio 2015\Projects\4k\4k\librocket\\lib\librocket.lib
