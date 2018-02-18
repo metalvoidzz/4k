@@ -59,9 +59,6 @@ static const char* error_msg[] =
 
 namespace DEMO
 {
-	// Uniforms
-	unsigned short uLoc[1]; //Uniform locations
-
 	void __fastcall Loop();
 #ifdef DEBUG_BUILD
 	void Die(int8_t cause = -1);
@@ -119,6 +116,8 @@ namespace RENDER
 	unsigned short hVS; //vertex shader handle
 	unsigned short hPX; //pixel shader handle
 	unsigned short hPr; //shader program handle
+	// Uniforms
+	unsigned int uLoc[2]; //Uniform locations
 };
 
 

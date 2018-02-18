@@ -120,6 +120,8 @@ typedef ptrdiff_t GLsizeiptr;
 	GLE(void, GenBuffers, GLsizei n, GLuint *buffers) \
 	GLE(void, GenFramebuffers, GLsizei n, GLuint * framebuffers) \
 	GLE(GLint, GetAttribLocation, GLuint program, const GLchar *name) \
+	GLE(void, BindAttribLocation, GLuint program, GLuint index, const GLchar* name) \
+	GLE(void, ValidateProgram, GLuint program) \
 	GLE(void, GetShaderInfoLog, GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog) \
 	GLE(void, GetShaderiv, GLuint shader, GLenum pname, GLint *params) \
 	GLE(GLint, GetUniformLocation, GLuint program, const GLchar *name) \

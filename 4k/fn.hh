@@ -46,7 +46,7 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (wParam == VK_SPACE)
 		{
 			init_gl();
-			render_gl();
+			//render_gl();
 		}
 	}
 #else
@@ -61,19 +61,25 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	else if (uMsg == WM_DESTROY)
 		DEMO::Die();
+	// Loop code
 	else if (uMsg == WM_TIMER)
 	{
 #ifdef DEBUG_BUILD
 		double row = bass_get_row(BASS::stream);
 		if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
 			DEMO::Die();
+		//row to time
+		DEMO::time = row * 0.01;
 		BASS_Update(0);
-		//Sleep(10);
+		Sleep(10);
 #else
 		float pos = Clinkster_GetPosition();
 		if (pos > Clinkster_MusicLength) DEMO::Die();
-		//Sleep(10);
+		DEMO::time += 0.01;
+		Sleep(10);
 #endif
+
+		SendMessage(hWnd, WM_PAINT, 0, 0);
 	}
 	else return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
@@ -285,6 +291,9 @@ __forceinline void __fastcall init_gl()
 	glAttachShader(hPr, hVS);
 	glAttachShader(hPr, hPX);
 
+	// Attributes
+	glBindAttribLocation(hPr, 0, "position");
+
 	glLinkProgram(hPr);
 
 #ifdef DEBUG_BUILD
@@ -297,41 +306,34 @@ __forceinline void __fastcall init_gl()
 
 #endif
 
-	// Use program __before__ uniforms are bound
-	glUseProgram(RENDER::hPr);
+	// Validate
+	glValidateProgram(hPr);
 
-	// Uniforms
-	DEMO::uLoc[0] = glGetUniformLocation(hPr, "u_time");
-
-	glUniform1f(hPr, DEMO::uLoc[0]);
+	// Add Uniforms
+	uLoc[0] = glGetUniformLocation(hPr, "u_time");
+	uLoc[1] = glGetUniformLocation(hPr, "alpha");
 }
 
 // Render a frame //
 void __fastcall render_gl()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Bind shader
+	glUseProgram(RENDER::hPr);
+	glUniform1f(RENDER::uLoc[0], DEMO::time);
+
 	// Render fullscreen quad
-
-	// Use program
-
-	/*glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glBegin(GL_QUADS);
-	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glVertex3f(1.0f, -1.0f, -1.0f);
-	glVertex3f(1.0f, 1.0f, -1.0f);
-	glVertex3f(-1.0f, 1.0f, -1.0f);
-	glEnd();
-	glPopMatrix();*/
-	glClear(GL_COLOR_BUFFER_BIT);
 	glBegin(GL_TRIANGLES);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex2i(0, 1);
-	glColor3f(0.0f, 1.0f, 0.0f);
+
 	glVertex2i(-1, -1);
-	glColor3f(0.0f, 0.0f, 1.0f);
 	glVertex2i(1, -1);
+	glVertex2i(-1, 1);
+
+	glVertex2i(1, 1);
+	glVertex2i(-1, 1);
+	glVertex2i(1, -1);
+
 	glEnd();
 	glFlush();
 }
