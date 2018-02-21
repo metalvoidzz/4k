@@ -31,9 +31,12 @@ extern "C"
 		return dest;
 	}
 #pragma function(m_strlen)
-	void m_strlen(const char *str, size_t *len)
+	size_t m_strlen(const char *str)
 	{
-		for (*len = 0; str[*len]; (*len)++);
+		size_t length;
+		for (length = 0; *str != '\0'; str++)
+			length++;
+		return length;
 	}
 }
 
@@ -179,16 +182,17 @@ void __stdcall WinMainCRTStartup()
 	Clinkster_GenerateMusic();
 	Clinkster_StartMusic();
 
-	static PAINTSTRUCT ps;
-
 	while (1)
 	{
+		if (GetAsyncKeyState(VK_ESCAPE))
+			DEMO::Die();
+
 		float pos = Clinkster_GetPosition();
 		if (pos > Clinkster_MusicLength) DEMO::Die();
 		DEMO::time += 0.01;
-		//render_gl();
-		BeginPaint(WINDOW::hWnd, &ps);
-		EndPaint(WINDOW::hWnd, &ps);
+		render_gl();
+		BeginPaint(WINDOW::hWnd, NULL);
+		EndPaint(WINDOW::hWnd, NULL);
 		Sleep(10);
 	}
 }

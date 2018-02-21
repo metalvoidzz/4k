@@ -100,13 +100,29 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #else
 
 
-LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	return DefWindowProcW(hWnd, uMsg, wParam, lParam);;
-}
+LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return DefWindowProcW(hWnd, uMsg, wParam, lParam); }
 
 
 #endif
+
+
+// Save some bytes by using a const WNDCLASS
+// todo: is hInstance = NULL valid everytime?
+#ifndef DEBUG_BUILD
+static const WNDCLASSA wnd = {
+	CS_OWNDC,
+	MainWProc,
+	0,
+	0,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	" ",
+};
+#endif
+
 
 // Init demo //
 __forceinline void __fastcall Init()
@@ -153,18 +169,6 @@ __forceinline void __fastcall Init()
 			DEMO::Die(ERR_OPEN_WIN);
 #else
 		// Release mode //
-		WNDCLASSA wnd;
-
-		wnd.hInstance = GetModuleHandle(NULL);
-		wnd.style = CS_OWNDC;
-		wnd.lpfnWndProc = MainWProc;
-		wnd.lpszClassName = " ";
-		wnd.cbClsExtra = 0;
-		wnd.cbWndExtra = 0;
-		wnd.hIcon = NULL;
-		wnd.hCursor = NULL;
-		wnd.hbrBackground = NULL;
-
 		RegisterClassA(&wnd);
 
 		hWnd = CreateWindowA
@@ -186,12 +190,12 @@ __forceinline void __fastcall Init()
 		// Context
 		hDC = GetDC(hWnd);
 
-		memset(&pfd, 0, sizeof(pfd));
+		//memset(&pfd, 0, sizeof(pfd));
 		pfd.nSize = sizeof(pfd);
-		pfd.nVersion = 1;
-		pfd.dwFlags = PFD_SUPPORT_OPENGL;
-		pfd.iPixelType = PFD_TYPE_RGBA;
-		pfd.cColorBits = 32;
+		//pfd.nVersion = 1;
+		//pfd.dwFlags = PFD_SUPPORT_OPENGL;
+		//pfd.iPixelType = PFD_TYPE_RGBA;
+		//pfd.cColorBits = 32;
 
 		pf_handle = ChoosePixelFormat(hDC, &pfd);
 
@@ -213,9 +217,9 @@ __forceinline void __fastcall Init()
 
 		// Show
 #ifndef DEBUG_BUILD
-		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 #endif
-		ShowWindow(hWnd, SW_SHOW);
+		//ShowWindow(hWnd, SW_SHOW);
 		SetForegroundWindow(hWnd);
 		SetFocus(hWnd);
 	}
@@ -280,17 +284,11 @@ __forceinline void __fastcall init_gl()
 	glShaderSource(hVS, 1, &vBuf, (const GLint*)&vLen);
 	glShaderSource(hPX, 1, &pBuf, (const GLint*)&pLen);
 #else
-	const char* vSrc = shaders[SHADER_VERTEX];
-	const char* pSrc = shaders[SHADER_PIXEL];
+	size_t vLen = m_strlen(vshader_glsl);
+	size_t pLen = m_strlen(pshader_glsl);
 
-	size_t vLen;
-	size_t pLen;
-
-	m_strlen(vSrc, &vLen);
-	m_strlen(pSrc, &pLen);
-
-	glShaderSource(hVS, 1, &vSrc, (const GLint*)&vLen);
-	glShaderSource(hPX, 1, &pSrc, (const GLint*)&pLen);
+	glShaderSource(hVS, 1, &vshader_glsl, (const GLint*)&vLen);
+	glShaderSource(hPX, 1, &pshader_glsl, (const GLint*)&pLen);
 #endif
 
 	// Compile shaders
