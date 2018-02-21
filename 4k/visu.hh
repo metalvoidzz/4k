@@ -5,60 +5,39 @@
 #include "def.hh"
 
 #include <GL/gl.h>
-#include <math.h>
-
-
-// Indices //
-#define SHADER_VERTEX	0
-#define SHADER_PIXEL	1
-
-
 
 /* If debug, load shaders from hd */
 #ifdef DEBUG_BUILD
 
 #include <stdio.h>
 
-#define VERTEX_FILE		"vshader.glsl"
+#define VERTEX_FILE "vshader.glsl"
 FILE* p_vshader;
 char* vBuf;
-#define PIXEL_FILE		"pshader.glsl"
+#define PIXEL_FILE "pshader.glsl"
 FILE* p_pshader;
 char* pBuf;
 
 /* If release, use static shader array */
 #else
 
+#include "auto_pshader.h"
+#include "auto_vshader.h"
+
+// Indices //
+#define SHADER_VERTEX	0
+#define SHADER_PIXEL	1
+
 // Shader array //
 const char* shaders[] =
 {
 	// Vertex shader //
 
-
-
-	"#version 120 \n" \
-
-	"attribute vec2 vertexIn;" \
-	"varying vec2 textureCoord;" \
-
-	// Main
-	"void main() {" \
-	"	gl_Position = vec4(vertexIn.xy,0.0,1.0);" \
-	"}",
-
-
+	vshader_glsl,
 
 	// Pixel shader //
 
-
-
-	"#version 120 \n" \
-	// Uniforms
-
-	// Main
-	"void main() {" \
-	"	gl_FragColor = vec4(0.1,0.0,0.0,1.0);" \
-	"}",
+	pshader_glsl,
 };
 
 #endif
@@ -131,6 +110,7 @@ typedef ptrdiff_t GLsizeiptr;
 	GLE(void, Uniform1f, GLint location, GLfloat v0) \
 	GLE(void, Uniform2f, GLint location, GLfloat v0, GLfloat v1) \
 	GLE(void, Uniform4f, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) \
+	GLE(void, Uniform3fv, GLint location, GLsizei count, const GLfloat *value) \
 	GLE(void, UniformMatrix4fv, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) \
 	GLE(void, UseProgram, GLuint program) \
 	GLE(void, VertexAttribPointer, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer)

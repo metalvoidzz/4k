@@ -1,6 +1,14 @@
 #version 120
 
+
+// Uniforms
 uniform float u_time;
+uniform float u_alpha;
+//uniform vec3 u_cam;
+uniform float u_x;
+uniform float u_y;
+uniform float u_z;
+
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -11,6 +19,41 @@ uniform float u_time;
 #define EPSILON 0.0001
 #define OMEGA 1.2
 #define WH vec2(WIDTH, HEIGHT)
+
+
+
+
+
+mat3 rotateX(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        vec3(1, 0, 0),
+        vec3(0, c, -s),
+        vec3(0, s, c)
+    );
+}
+
+mat3 rotateY(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        vec3(c, 0, s),
+        vec3(0, 1, 0),
+        vec3(-s, 0, c)
+    );
+}
+
+mat3 rotateZ(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        vec3(c, -s, 0),
+        vec3(s, c, 0),
+        vec3(0, 0, 1)
+    );
+}
+
 
 
 
@@ -63,21 +106,14 @@ float Combine(float d1, float d2, float r)
 }
 
 
-#define Repeat(p, c) \
-	mod(p, c)-0.5*c
+#define Repeat(p, c) mod(p, c)-0.5*c
 	
+
 float sceneSDF(vec3 p)
 {
-	float s = cos(sin(u_time * 3)) * 0.5;
-	
-	float box = cubeSDF(p, vec3(0.2,0.2,0.2));
-	
-	p.y -= sin(u_time) * 2;
-	
 	float torus = torusSDF(p, vec2(cos(sin(u_time))*2,0.1));
-	
-	return min(Combine(box, torus, 0.2), sphereSDF(p, 0.3));
-	//return cubeSDF(Repeat(p, 2), vec3(.2, .2, .2));
+
+	return min(torus, sphereSDF(p, 0.3));
 }
 
 
@@ -178,8 +214,6 @@ vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 e
     return color;
 }
 
-
-
 void main()
 {
 	vec2 uv = gl_FragCoord.xy / WH;
@@ -187,8 +221,9 @@ void main()
     uv.x *= WIDTH / HEIGHT;
 	
 	vec3 viewDir = rayDirection(45.0, WH);
-    vec3 eye = vec3(8.0, 5.0, u_time);
-    mat4 viewToWorld = viewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
+    
+	vec3 eye = vec3(8.0, 5.0, 1.0);
+    mat4 viewToWorld = viewMatrix(eye, vec3(u_x, u_y, u_z), vec3(0.0, 1.0, 0.0));
     vec3 worldDir = (viewToWorld * vec4(viewDir, 0.0)).xyz;
 	
     float dist = raymarch(eye, worldDir);
@@ -198,7 +233,7 @@ void main()
 	
     if (dist > MAX_DIST - EPSILON)
 	{
-        gl_FragColor = vec4(SkyColor(dir), 0.0);
+        gl_FragColor = vec4(SkyColor(dir) - u_alpha, 0.0);
 		return;
     }
 	
@@ -211,7 +246,7 @@ void main()
     
     vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
 	
-    gl_FragColor = vec4(color, 1.0);	
+    gl_FragColor = vec4(color - u_alpha, 1.0);	
 }
 
 

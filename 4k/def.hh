@@ -62,6 +62,7 @@ namespace DEMO
 	void __fastcall Loop();
 #ifdef DEBUG_BUILD
 	void Die(int8_t cause = -1);
+	__forceinline void __fastcall UpdateRocket();
 #else
 	__forceinline void __fastcall Die();
 #endif
@@ -72,8 +73,16 @@ namespace DEMO
 
 #ifdef DEBUG_BUILD
 
+
 #define EXPORT_TRACK_NAME "track.wav"
 
+
+#define NUM_TRACKS		4
+
+#define TRACK_CAMX		0
+#define TRACK_CAMY		1
+#define TRACK_CAMZ		2
+#define TRACK_APLHA		3
 namespace ROCKET
 {
 	// Sync device
@@ -81,9 +90,13 @@ namespace ROCKET
 	// Sync callback
 	sync_cb cb;
 	// Sync tracks
-	const struct sync_track *r;
-	const struct sync_track *g;
-	const struct sync_track *b;
+	const struct sync_track* tracks[NUM_TRACKS];
+	const char* trackNames[NUM_TRACKS] = {
+		"CamX",
+		"CamY",
+		"CamZ",
+		"Alpha",
+	};
 };
 
 namespace BASS
@@ -100,7 +113,7 @@ namespace BASS
 
 namespace WINDOW
 {
-	HWND win_handle;
+	HWND hWnd;
 	HGLRC hRC;
 	PIXELFORMATDESCRIPTOR pfd;
 	int pf_handle;
@@ -116,20 +129,27 @@ namespace RENDER
 	unsigned short hVS; //vertex shader handle
 	unsigned short hPX; //pixel shader handle
 	unsigned short hPr; //shader program handle
+
 	// Uniforms
-	unsigned int uLoc[2]; //Uniform locations
+#define UNIF_UTIME	0
+#define UNIF_ALPHA	1
+#define UNIF_CAM	2
+
+	int uLoc[5]; //Uniform locations
+
+	float alpha = 0.0;
+	float camPos[5];
+	float cx, cy, cz;
 };
 
 
 /* Global namespace functions */
 
 
-LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-__forceinline void Init();
+__forceinline void __fastcall Init();
 void __fastcall render_gl();
+void __fastcall init_gl();
 
 #ifdef DEBUG_BUILD
-void __fastcall init_gl();
-#else
-__forceinline void __fastcall init_gl();
+LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif

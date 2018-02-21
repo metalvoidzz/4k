@@ -30,6 +30,11 @@ extern "C"
 			*dest8++ = *src8++;
 		return dest;
 	}
+#pragma function(m_strlen)
+	void m_strlen(const char *str, size_t *len)
+	{
+		for (*len = 0; str[*len]; (*len)++);
+	}
 }
 
 #endif
@@ -84,9 +89,17 @@ void __fastcall InitRocket()
 {
 	using namespace ROCKET;
 
-	r = sync_get_track(rocket, "r");
-	g = sync_get_track(rocket, "g");
-	b = sync_get_track(rocket, "b");
+	// Init rocket device
+	rocket = sync_create_device("s");
+	
+	if (!rocket)
+		DEMO::Die(ERR_INIT_SYNC);
+	
+	if (sync_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
+		DEMO::Die(ERR_INIT_SYNC);
+
+	for (int i = 0; i < NUM_TRACKS; i++)
+		tracks[i] = sync_get_track(rocket, trackNames[i]);
 
 	// Init callback
 	ROCKET::cb =
@@ -143,20 +156,13 @@ void main()
 	if (!BASS::stream)
 		DEMO::Die(ERR_INIT_BASS);
 
-	// Init rocket device
-	ROCKET::rocket = sync_create_device("s");
-	if (!ROCKET::rocket)
-		DEMO::Die(ERR_INIT_SYNC);
-	if (sync_connect(ROCKET::rocket, "localhost", SYNC_DEFAULT_PORT))
-		DEMO::Die(ERR_INIT_SYNC);
-	
 	InitRocket();
 	Play();
 
 	// Timer driven message loop
-	SetTimer(WINDOW::win_handle, 0, 10, NULL);
+	SetTimer(WINDOW::hWnd, 0, 10, NULL);
 	MSG message;
-	while (GetMessageW(&message, WINDOW::win_handle, 0, 0) != 0)
+	while (GetMessageW(&message, WINDOW::hWnd, 0, 0) != 0)
 	{
 		TranslateMessage(&message);
 		DispatchMessageW(&message);
@@ -165,7 +171,7 @@ void main()
 
 #else
 
-// In release mode, include auto-generated stuff
+// In release mode, no message loop to save space
 
 void __stdcall WinMainCRTStartup()
 {
@@ -173,12 +179,17 @@ void __stdcall WinMainCRTStartup()
 	Clinkster_GenerateMusic();
 	Clinkster_StartMusic();
 
-	SetTimer(WINDOW::win_handle, 0, 10, NULL);
-	MSG message;
-	while (GetMessageW(&message, WINDOW::win_handle, 0, 0) != 0)
+	static PAINTSTRUCT ps;
+
+	while (1)
 	{
-		TranslateMessage(&message);
-		DispatchMessageW(&message);
+		float pos = Clinkster_GetPosition();
+		if (pos > Clinkster_MusicLength) DEMO::Die();
+		DEMO::time += 0.01;
+		//render_gl();
+		BeginPaint(WINDOW::hWnd, &ps);
+		EndPaint(WINDOW::hWnd, &ps);
+		Sleep(10);
 	}
 }
 

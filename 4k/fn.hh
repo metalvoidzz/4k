@@ -19,40 +19,64 @@ namespace DEMO
 			MessageBox(NULL, error_msg[cause], "Error", MB_OK);
 		ExitProcess(0);
 	}
+
+	__forceinline void __fastcall UpdateRocket()
+	{
+		using namespace DEMO;
+
+		double row = bass_get_row(BASS::stream);
+		if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
+			Die();
+
+		time = row * 0.01;
+
+		/* Update values */
+
+		// Camera position
+		RENDER::cx = sync_get_val(ROCKET::tracks[TRACK_CAMX], row);
+		RENDER::cy = sync_get_val(ROCKET::tracks[TRACK_CAMY], row);
+		RENDER::cz = sync_get_val(ROCKET::tracks[TRACK_CAMZ], row);
+		
+		// Alpha
+		RENDER::alpha = sync_get_val(ROCKET::tracks[TRACK_APLHA], row);
+	}
 #else
 	__forceinline void __fastcall Die()
 	{
 		ExitProcess(0);
 	}
 #endif
-};
+};	
 
 
 /* Window functions */
 
 
+#ifdef DEBUG_BUILD
 // Window callback //
 LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static PAINTSTRUCT ps;
 
 	// Make sure to exit process
-#ifdef DEBUG_BUILD
 	if (uMsg == WM_CHAR)
 	{
 		if (wParam == VK_ESCAPE)
 			DEMO::Die();
 		// Recompile shaders
 		else if (wParam == VK_SPACE)
-		{
 			init_gl();
-			//render_gl();
+		else if (wParam == VK_UP)
+		{
+			//RENDER::camPos[0] += 0.1;
+		} else if (wParam == VK_DOWN) {
+
+		} else if (wParam == VK_LEFT) {
+
+		} else if (wParam == VK_RIGHT) {
+
 		}
 	}
-#else
-	if (uMsg == WM_CHAR && wParam == VK_ESCAPE)
-		DEMO::Die();
-#endif
 	else if (uMsg == WM_PAINT)
 	{
 		render_gl();
@@ -64,89 +88,108 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// Loop code
 	else if (uMsg == WM_TIMER)
 	{
-#ifdef DEBUG_BUILD
-		double row = bass_get_row(BASS::stream);
-		if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
-			DEMO::Die();
-		//row to time
-		DEMO::time = row * 0.01;
+		DEMO::UpdateRocket();
+
 		BASS_Update(0);
 		Sleep(10);
-#else
-		float pos = Clinkster_GetPosition();
-		if (pos > Clinkster_MusicLength) DEMO::Die();
-		DEMO::time += 0.01;
-		Sleep(10);
-#endif
 
 		SendMessage(hWnd, WM_PAINT, 0, 0);
 	}
 	else return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
+#else
+
+
+LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	return DefWindowProcW(hWnd, uMsg, wParam, lParam);;
+}
+
+
+#endif
 
 // Init demo //
-__forceinline void Init()
+__forceinline void __fastcall Init()
 {
 	// Init Window
 	{
 		using namespace WINDOW;
 
-		WNDCLASSW wnd;
+#ifdef DEBUG_BUILD
+
+		// Debug mode //
+
+		WNDCLASSA wnd;
 
 		wnd.hInstance = GetModuleHandle(NULL);
 		wnd.style = CS_OWNDC;
 		wnd.lpfnWndProc = MainWProc;
-		wnd.lpszClassName = L"H";
+		wnd.lpszClassName = " ";
 		wnd.cbClsExtra = 0;
 		wnd.cbWndExtra = 0;
 		wnd.hIcon = NULL;
 		wnd.hCursor = NULL;
 		wnd.hbrBackground = NULL;
-		wnd.lpszMenuName = NULL;
 
-#ifdef DEBUG_BUILD
-		if (!RegisterClassW(&wnd))
+		if (!RegisterClassA(&wnd))
 			DEMO::Die(ERR_INIT_WINAPI);
-#else
-		RegisterClassW(&wnd);
-#endif
 
-		// Open
-/*		HMONITOR hmon = MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY);
-		MONITORINFO mi = { sizeof(mi) };
-#ifdef DEBUG_BUILD
-		if (!GetMonitorInfo(hmon, &mi)) DEMO::Die(ERR_OPEN_WIN);
-#else
-		GetMonitorInfo(hmon, &mi);
-#endif*/
-
-		win_handle = CreateWindowW
+		hWnd = CreateWindowA
 		(
-			L"H",
-			L"",
+			" ",
+			"",
 			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
 			0,
 			0,
 			WIDTH,
 			HEIGHT,
-			(HWND)NULL,
-			(HMENU)NULL,
+			NULL,
+			NULL,
 			wnd.hInstance,
 			NULL
 		);
 
-#ifdef DEBUG_BUILD
-		if (!win_handle)
+		if (!hWnd)
 			DEMO::Die(ERR_OPEN_WIN);
+#else
+		// Release mode //
+		WNDCLASSA wnd;
+
+		wnd.hInstance = GetModuleHandle(NULL);
+		wnd.style = CS_OWNDC;
+		wnd.lpfnWndProc = MainWProc;
+		wnd.lpszClassName = " ";
+		wnd.cbClsExtra = 0;
+		wnd.cbWndExtra = 0;
+		wnd.hIcon = NULL;
+		wnd.hCursor = NULL;
+		wnd.hbrBackground = NULL;
+
+		RegisterClassA(&wnd);
+
+		hWnd = CreateWindowA
+		(
+			" ",
+			"",
+			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
+			0,
+			0,
+			WIDTH,
+			HEIGHT,
+			NULL,
+			NULL,
+			wnd.hInstance,
+			NULL
+		);
 #endif
 
 		// Context
-		hDC = GetDC(win_handle);
+		hDC = GetDC(hWnd);
 
 		memset(&pfd, 0, sizeof(pfd));
 		pfd.nSize = sizeof(pfd);
 		pfd.nVersion = 1;
-		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+		pfd.dwFlags = PFD_SUPPORT_OPENGL;
 		pfd.iPixelType = PFD_TYPE_RGBA;
 		pfd.cColorBits = 32;
 
@@ -163,24 +206,18 @@ __forceinline void Init()
 #endif
 
 		DescribePixelFormat(hDC, pf_handle, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-		ReleaseDC(win_handle, hDC);
+		ReleaseDC(hWnd, hDC);
 
 		hRC = wglCreateContext(hDC);
 		wglMakeCurrent(hDC, hRC);
 
 		// Show
 #ifndef DEBUG_BUILD
-		SetWindowPos(win_handle, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 #endif
-		// No borders
-		//LONG lStyle = GetWindowLong(win_handle, GWL_STYLE);
-		//lStyle &= ~(WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE);
-		//SetWindowLong(win_handle, GWL_STYLE, lStyle);
-		ShowWindow(win_handle, SW_SHOW);
-#ifdef DEBUG_BUILD
-		SetForegroundWindow(win_handle);
-		SetFocus(win_handle);
-#endif
+		ShowWindow(hWnd, SW_SHOW);
+		SetForegroundWindow(hWnd);
+		SetFocus(hWnd);
 	}
 
 	// Init OpenGL
@@ -200,8 +237,12 @@ __forceinline void __fastcall init_gl()
 {
 	using namespace RENDER;
 
+#ifdef DEBUG_BUILD
 	if (!init_wrangler())
 		DEMO::Die();
+#else
+	init_wrangler();
+#endif
 
 	// Set aspect
 	glViewport(0, 0, WIDTH, HEIGHT);
@@ -242,8 +283,11 @@ __forceinline void __fastcall init_gl()
 	const char* vSrc = shaders[SHADER_VERTEX];
 	const char* pSrc = shaders[SHADER_PIXEL];
 
-	size_t vLen = sizeof(*vSrc);
-	size_t pLen = sizeof(*pSrc);
+	size_t vLen;
+	size_t pLen;
+
+	m_strlen(vSrc, &vLen);
+	m_strlen(pSrc, &pLen);
 
 	glShaderSource(hVS, 1, &vSrc, (const GLint*)&vLen);
 	glShaderSource(hPX, 1, &pSrc, (const GLint*)&pLen);
@@ -270,7 +314,7 @@ __forceinline void __fastcall init_gl()
 		glGetShaderiv(hVS, GL_INFO_LOG_LENGTH, &logSize);
 		glGetShaderInfoLog(hVS, logSize, &logSize, &str[0]);
 
-		MessageBoxA(WINDOW::win_handle, str, "Vertex shader output", MB_OK);
+		MessageBoxA(WINDOW::hWnd, str, "Vertex shader output", MB_OK);
 		free(str);
 
 		// Pixel shader
@@ -278,13 +322,10 @@ __forceinline void __fastcall init_gl()
 		str = (GLchar*)malloc(logSize + 1);
 		glGetShaderInfoLog(hPX, logSize, &logSize, &str[0]);
 
-		MessageBoxA(WINDOW::win_handle, str, "Pixel shader output", MB_OK);
-
-		//DEMO::Die();
+		MessageBoxA(WINDOW::hWnd, str, "Pixel shader output", MB_OK);
 	}
 
 #endif
-
 	// Link shaders
 	hPr = glCreateProgram();
 
@@ -301,17 +342,23 @@ __forceinline void __fastcall init_gl()
 	glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
 	glGetShaderiv(hPX, GL_LINK_STATUS, &success[1]);
 
-	//if (!success[0] || !success[1])
-	//	DEMO::Die(ERR_SHADER_LNK);
-
-#endif
+	if (!success[0] || !success[1])
+		DEMO::Die(ERR_SHADER_LNK);
 
 	// Validate
 	glValidateProgram(hPr);
+#endif
+
+	// Bind
+	glUseProgram(RENDER::hPr);
 
 	// Add Uniforms
-	uLoc[0] = glGetUniformLocation(hPr, "u_time");
-	uLoc[1] = glGetUniformLocation(hPr, "alpha");
+	uLoc[UNIF_UTIME] = glGetUniformLocation(hPr, "u_time");
+	uLoc[UNIF_ALPHA] = glGetUniformLocation(hPr, "u_alpha");
+	uLoc[2] = glGetUniformLocation(hPr, "u_x");
+	uLoc[3] = glGetUniformLocation(hPr, "u_y");
+	uLoc[4] = glGetUniformLocation(hPr, "u_z");
+	//uLoc[UNIF_CAM] = glGetUniformLocation(hPr, "u_cam");
 }
 
 // Render a frame //
@@ -319,20 +366,21 @@ void __fastcall render_gl()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Bind shader
-	glUseProgram(RENDER::hPr);
-	glUniform1f(RENDER::uLoc[0], DEMO::time);
+	// Uniforms
+	glUniform1f(RENDER::uLoc[UNIF_UTIME], DEMO::time);
+	glUniform1f(RENDER::uLoc[UNIF_ALPHA], RENDER::alpha);
+	//glUniform3fv(RENDER::uLoc[UNIF_CAM], 3, RENDER::camPos);
+	glUniform1f(RENDER::uLoc[2], RENDER::cx);
+	glUniform1f(RENDER::uLoc[3], RENDER::cy);
+	glUniform1f(RENDER::uLoc[4], RENDER::cz);
 
 	// Render fullscreen quad
-	glBegin(GL_TRIANGLES);
+	glBegin(GL_QUADS);
 
-	glVertex2i(-1, -1);
-	glVertex2i(1, -1);
-	glVertex2i(-1, 1);
-
-	glVertex2i(1, 1);
-	glVertex2i(-1, 1);
-	glVertex2i(1, -1);
+	glVertex2f(-1, 1);
+	glVertex2f(1, 1);
+	glVertex2f(1, -1);
+	glVertex2f(-1, -1);
 
 	glEnd();
 	glFlush();
