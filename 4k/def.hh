@@ -111,10 +111,6 @@ namespace BASS
 namespace WINDOW
 {
 	HWND hWnd;
-	HGLRC hRC;
-	PIXELFORMATDESCRIPTOR pfd;
-	int pf_handle;
-	HDC hDC;
 };
 
 
@@ -123,10 +119,6 @@ namespace WINDOW
 
 namespace RENDER
 {
-	unsigned short hVS; //vertex shader handle
-	unsigned short hPX; //pixel shader handle
-	unsigned short hPr; //shader program handle
-
 	// Uniforms
 
 #define NUM_UNIF	5
@@ -134,6 +126,7 @@ namespace RENDER
 #define UNIF_UTIME	0
 #define UNIF_ALPHA	1
 #define UNIF_CAM	2
+
 
 #define ADD_UNIFORMS \
 	uLoc[UNIF_UTIME] = glGetUniformLocation(hPr, "u_time"); \
@@ -155,7 +148,7 @@ namespace RENDER
 
 	float alpha = 0.0;
 	float camPos[3];
-	float cx, cy, cz;
+	int cx, cy, cz;
 };
 
 
@@ -165,7 +158,4 @@ namespace RENDER
 __forceinline void __fastcall Init();
 void __fastcall render_gl();
 void __fastcall init_gl();
-
-#ifdef DEBUG_BUILD
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#endif

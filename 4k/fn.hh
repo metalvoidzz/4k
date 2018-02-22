@@ -99,7 +99,7 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #else
 
 
-LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return DefWindowProcW(hWnd, uMsg, wParam, lParam); }
+LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return 1; }
 
 
 #endif
@@ -187,7 +187,9 @@ __forceinline void __fastcall Init()
 #endif
 
 		// Context
-		hDC = GetDC(hWnd);
+		HDC hDC = GetDC(hWnd);
+
+		PIXELFORMATDESCRIPTOR pfd;
 
 		//memset(&pfd, 0, sizeof(pfd));
 		pfd.nSize = sizeof(pfd);
@@ -196,7 +198,7 @@ __forceinline void __fastcall Init()
 		//pfd.iPixelType = PFD_TYPE_RGBA;
 		//pfd.cColorBits = 32;
 
-		pf_handle = ChoosePixelFormat(hDC, &pfd);
+		int pf_handle = ChoosePixelFormat(hDC, &pfd);
 
 #ifdef DEBUG_BUILD
 		if (!pf_handle)
@@ -211,16 +213,15 @@ __forceinline void __fastcall Init()
 		DescribePixelFormat(hDC, pf_handle, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 		ReleaseDC(hWnd, hDC);
 
-		hRC = wglCreateContext(hDC);
-		wglMakeCurrent(hDC, hRC);
+		wglMakeCurrent(hDC, wglCreateContext(hDC));
 
 		// Show
 #ifndef DEBUG_BUILD
 		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 #endif
-		ShowWindow(hWnd, SW_SHOW);
-		SetForegroundWindow(hWnd);
-		SetFocus(hWnd);
+		//ShowWindow(hWnd, SW_SHOW);
+		//SetForegroundWindow(hWnd);
+		//SetFocus(hWnd);
 	}
 
 	// Init OpenGL
@@ -251,8 +252,8 @@ __forceinline void __fastcall init_gl()
 	glViewport(0, 0, WIDTH, HEIGHT);
 
 	// Create shaders
-	hVS = glCreateShader(GL_VERTEX_SHADER);
-	hPX = glCreateShader(GL_FRAGMENT_SHADER);
+	unsigned short hVS = glCreateShader(GL_VERTEX_SHADER);
+	unsigned short  hPX = glCreateShader(GL_FRAGMENT_SHADER);
 
 #ifdef DEBUG_BUILD
 	p_vshader = fopen(VERTEX_FILE, "r");
@@ -324,7 +325,7 @@ __forceinline void __fastcall init_gl()
 
 #endif
 	// Link shaders
-	hPr = glCreateProgram();
+	unsigned short hPr = glCreateProgram();
 
 	glAttachShader(hPr, hVS);
 	glAttachShader(hPr, hPX);
@@ -347,7 +348,7 @@ __forceinline void __fastcall init_gl()
 #endif
 
 	// Bind
-	glUseProgram(RENDER::hPr);
+	glUseProgram(hPr);
 
 	ADD_UNIFORMS
 }

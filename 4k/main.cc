@@ -6,32 +6,12 @@
 
 #ifndef DEBUG_BUILD
 
-
-// Implemented crt functions
 extern "C"
 {
 	void* _fltused = 0;
 	void* _chkstk = 0;
-#pragma function(memset)
-	void *memset(void *dest, int c, size_t count)
-	{
-		char *bytes = (char *)dest;
-		while (count--)
-			*bytes++ = (char)c;
-		return dest;
-	}
-
-#pragma function(memcpy)
-	void *memcpy(void *dest, const void *src, size_t count)
-	{
-		char *dest8 = (char *)dest;
-		const char *src8 = (const char *)src;
-		while (count--)
-			*dest8++ = *src8++;
-		return dest;
-	}
-#pragma function(m_strlen)
-	size_t m_strlen(const char *str)
+	
+	size_t __fastcall m_strlen(const char *str)
 	{
 		size_t length;
 		for (length = 0; *str != '\0'; str++)
@@ -176,6 +156,8 @@ void main()
 
 // In release mode, no message loop to save space
 
+#include "asmlib.hh"
+
 void __stdcall WinMainCRTStartup()
 {
 	Init();
@@ -187,12 +169,9 @@ void __stdcall WinMainCRTStartup()
 		if (GetAsyncKeyState(VK_ESCAPE))
 			DEMO::Die();
 
-		float pos = Clinkster_GetPosition();
-		if (pos > Clinkster_MusicLength) DEMO::Die();
+		if (Clinkster_GetPosition() > Clinkster_MusicLength) DEMO::Die();
 		DEMO::time += 0.01;
 		render_gl();
-		BeginPaint(WINDOW::hWnd, NULL);
-		EndPaint(WINDOW::hWnd, NULL);
 		Sleep(10);
 	}
 }

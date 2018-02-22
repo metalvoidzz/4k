@@ -28,7 +28,6 @@ char* pBuf;
 
 
 
-
 /* Minimalist extension wrangler
 * See https://github.com/ApoorvaJ/Papaya
 */

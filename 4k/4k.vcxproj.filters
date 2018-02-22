@@ -24,6 +24,9 @@
     <ClInclude Include="clinkster.h">
       <Filter>src\data</Filter>
     </ClInclude>
+    <ClInclude Include="asmlib.hh">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cc">
@@ -37,10 +40,16 @@
     <Object Include="..\music_here\music.obj">
       <Filter>src\data</Filter>
     </Object>
+    <Object Include="lib.obj">
+      <Filter>src\data</Filter>
+    </Object>
   </ItemGroup>
   <ItemGroup>
     <None Include="clinkster.asm">
       <Filter>src\data</Filter>
+    </None>
+    <None Include="lib.asm">
+      <Filter>src</Filter>
     </None>
   </ItemGroup>
 </Project>
