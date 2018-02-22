@@ -163,8 +163,8 @@ crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj k
     </PreLinkEvent>
     <PreBuildEvent>
       <Command>cd ..\
-shader_minifier.exe Debug\vshader.glsl -o 4k\auto_vshader.h
-shader_minifier.exe Debug\pshader.glsl -o 4k\auto_pshader.h</Command>
+shader_minifier.exe --preserve-externals Debug\vshader.glsl -o 4k\auto_vshader.h
+shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

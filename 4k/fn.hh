@@ -51,7 +51,6 @@ namespace DEMO
 
 /* Window functions */
 
-
 #ifdef DEBUG_BUILD
 // Window callback //
 LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -217,9 +216,9 @@ __forceinline void __fastcall Init()
 
 		// Show
 #ifndef DEBUG_BUILD
-		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 #endif
-		//ShowWindow(hWnd, SW_SHOW);
+		ShowWindow(hWnd, SW_SHOW);
 		SetForegroundWindow(hWnd);
 		SetFocus(hWnd);
 	}
@@ -350,13 +349,7 @@ __forceinline void __fastcall init_gl()
 	// Bind
 	glUseProgram(RENDER::hPr);
 
-	// Add Uniforms
-	uLoc[UNIF_UTIME] = glGetUniformLocation(hPr, "u_time");
-	uLoc[UNIF_ALPHA] = glGetUniformLocation(hPr, "u_alpha");
-	uLoc[2] = glGetUniformLocation(hPr, "u_x");
-	uLoc[3] = glGetUniformLocation(hPr, "u_y");
-	uLoc[4] = glGetUniformLocation(hPr, "u_z");
-	//uLoc[UNIF_CAM] = glGetUniformLocation(hPr, "u_cam");
+	ADD_UNIFORMS
 }
 
 // Render a frame //
@@ -364,13 +357,7 @@ void __fastcall render_gl()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Uniforms
-	glUniform1f(RENDER::uLoc[UNIF_UTIME], DEMO::time);
-	glUniform1f(RENDER::uLoc[UNIF_ALPHA], RENDER::alpha);
-	//glUniform3fv(RENDER::uLoc[UNIF_CAM], 3, RENDER::camPos);
-	glUniform1f(RENDER::uLoc[2], RENDER::cx);
-	glUniform1f(RENDER::uLoc[3], RENDER::cy);
-	glUniform1f(RENDER::uLoc[4], RENDER::cz);
+	EVAL_UNIFORMS
 
 	// Render fullscreen quad
 	glBegin(GL_QUADS);

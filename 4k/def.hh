@@ -54,9 +54,6 @@ static const char* error_msg[] =
 #define HEIGHT	600
 
 
-// Uniform bindings
-#define UNIF_FLOAT_TIME 0
-
 namespace DEMO
 {
 	void __fastcall Loop();
@@ -131,14 +128,33 @@ namespace RENDER
 	unsigned short hPr; //shader program handle
 
 	// Uniforms
+
+#define NUM_UNIF	5
+
 #define UNIF_UTIME	0
 #define UNIF_ALPHA	1
 #define UNIF_CAM	2
 
-	int uLoc[5]; //Uniform locations
+#define ADD_UNIFORMS \
+	uLoc[UNIF_UTIME] = glGetUniformLocation(hPr, "u_time"); \
+	uLoc[UNIF_ALPHA] = glGetUniformLocation(hPr, "u_alpha"); \
+	uLoc[2] = glGetUniformLocation(hPr, "u_x"); \
+	uLoc[3] = glGetUniformLocation(hPr, "u_y"); \
+	uLoc[4] = glGetUniformLocation(hPr, "u_z"); \
+	//uLoc[UNIF_CAM] = glGetUniformLocation(hPr, "u_cam"); \
+
+#define EVAL_UNIFORMS \
+	glUniform1f(RENDER::uLoc[UNIF_UTIME], DEMO::time); \
+	glUniform1f(RENDER::uLoc[UNIF_ALPHA], RENDER::alpha); \
+	glUniform1i(RENDER::uLoc[2], RENDER::cx); \
+	glUniform1i(RENDER::uLoc[3], RENDER::cy); \
+	glUniform1i(RENDER::uLoc[4], RENDER::cz); \
+
+
+	int uLoc[NUM_UNIF]; //Uniform locations
 
 	float alpha = 0.0;
-	float camPos[5];
+	float camPos[3];
 	float cx, cy, cz;
 };
 

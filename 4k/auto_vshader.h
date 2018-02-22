@@ -3,11 +3,10 @@
  */
 #ifndef AUTO_VSHADER_H_
 # define AUTO_VSHADER_H_
-# define VAR_POSITION "v"
 
 const char *vshader_glsl =
  "#version 120\n"
- "attribute vec4 v;"
+ "attribute vec4 position;"
  "void main()"
  "{"
    "gl_Position=gl_Vertex;"
