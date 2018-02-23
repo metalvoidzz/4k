@@ -86,7 +86,7 @@ namespace ROCKET
 	sync_device* rocket;
 	// Sync callback
 	sync_cb cb;
-	// Sync tracks
+   	// Sync tracks
 	const struct sync_track* tracks[NUM_TRACKS];
 	const char* trackNames[NUM_TRACKS] = {
 		"CamX",

@@ -3,7 +3,6 @@
  * Sources of my first demoscene production
  */
 
-
 #ifndef DEBUG_BUILD
 
 extern "C"

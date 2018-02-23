@@ -41,7 +41,7 @@ namespace DEMO
 		RENDER::alpha = sync_get_val(ROCKET::tracks[TRACK_APLHA], row);
 	}
 #else
-	__forceinline void __fastcall Die()
+	void __fastcall Die()
 	{
 		ExitProcess(0);
 	}
@@ -55,7 +55,7 @@ namespace DEMO
 // Window callback //
 LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static PAINTSTRUCT ps;
+ 	static PAINTSTRUCT ps;
 
 	// Make sure to exit process
 	if (uMsg == WM_CHAR)
@@ -99,14 +99,16 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #else
 
 
-LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return 1; }
+LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	return 1;
+}
 
 
 #endif
 
 
 // Save some bytes by using a const WNDCLASS
-// todo: is hInstance = NULL valid everytime?
 #ifndef DEBUG_BUILD
 static const WNDCLASSA wnd = {
 	CS_OWNDC,
@@ -121,6 +123,38 @@ static const WNDCLASSA wnd = {
 	" ",
 };
 #endif
+
+
+
+static const PIXELFORMATDESCRIPTOR pfd = {
+	sizeof(PIXELFORMATDESCRIPTOR),
+	1,
+	PFD_SUPPORT_OPENGL,
+	PFD_TYPE_RGBA,
+	32,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+};
+
 
 
 // Init demo //
@@ -181,22 +215,13 @@ __forceinline void __fastcall Init()
 			HEIGHT,
 			NULL,
 			NULL,
-			wnd.hInstance,
+			NULL,
 			NULL
 		);
 #endif
 
 		// Context
 		HDC hDC = GetDC(hWnd);
-
-		PIXELFORMATDESCRIPTOR pfd;
-
-		//memset(&pfd, 0, sizeof(pfd));
-		pfd.nSize = sizeof(pfd);
-		//pfd.nVersion = 1;
-		//pfd.dwFlags = PFD_SUPPORT_OPENGL;
-		//pfd.iPixelType = PFD_TYPE_RGBA;
-		//pfd.cColorBits = 32;
 
 		int pf_handle = ChoosePixelFormat(hDC, &pfd);
 
@@ -210,18 +235,12 @@ __forceinline void __fastcall Init()
 		SetPixelFormat(hDC, pf_handle, &pfd);
 #endif
 
-		DescribePixelFormat(hDC, pf_handle, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-		ReleaseDC(hWnd, hDC);
-
 		wglMakeCurrent(hDC, wglCreateContext(hDC));
 
 		// Show
 #ifndef DEBUG_BUILD
 		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 #endif
-		//ShowWindow(hWnd, SW_SHOW);
-		//SetForegroundWindow(hWnd);
-		//SetFocus(hWnd);
 	}
 
 	// Init OpenGL
@@ -241,12 +260,7 @@ __forceinline void __fastcall init_gl()
 {
 	using namespace RENDER;
 
-#ifdef DEBUG_BUILD
-	if (!init_wrangler())
-		DEMO::Die();
-#else
 	init_wrangler();
-#endif
 
 	// Set aspect
 	glViewport(0, 0, WIDTH, HEIGHT);
