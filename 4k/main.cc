@@ -5,6 +5,7 @@
 
 #ifndef DEBUG_BUILD
 
+#pragma code_seg(".extern")
 extern "C"
 {
 	void* _fltused = 0;
@@ -22,101 +23,18 @@ extern "C"
 #endif
 
 
-/* Functions used in main and fn.hh */
-
-
-#ifdef DEBUG_BUILD
-
-#include "librocket/sync.h"
-#include "bass/c/bass.h"
-
-#include <math.h>
-
-// Start demo playback
-void __fastcall Play();
-// Init rocket tracks
-void __fastcall InitRocket();
-// Rocket callback
-void PauseRocket(void *d, int flag);
-void SetRocketTime(void *d, int row);
-int IsRocketRunning(void *d);
-// Bass
-double bass_get_row(HSTREAM h);
-
-#endif
-
-
 #include "clinkster.h"
 #include "fn.hh"
+#include "sync.hh"
 
 
 #ifdef DEBUG_BUILD
 
-
-static const float bpm = 210.0f;
-static const int rpb = 8;
-static const double row_rate = (double(bpm) / 60) * rpb;
-
-
-void __fastcall Play()
+void __fastcall Quit()
 {
-	Init();
-
-	// Play track from hd
-	BASS_Start();
-	BASS_ChannelPlay(BASS::stream, false);
-}
-
-void __fastcall InitRocket()
-{
-	using namespace ROCKET;
-
-	// Init rocket device
-	rocket = sync_create_device("s");
-	
-	if (!rocket)
-		DEMO::Die(ERR_INIT_SYNC);
-	
-	if (sync_connect(rocket, "localhost", SYNC_DEFAULT_PORT))
-		DEMO::Die(ERR_INIT_SYNC);
-
-	for (int i = 0; i < NUM_TRACKS; i++)
-		tracks[i] = sync_get_track(rocket, trackNames[i]);
-
-	// Init callback
-	ROCKET::cb =
-	{
-		PauseRocket,
-		SetRocketTime,
-		IsRocketRunning,
-	};
-}
-
-void PauseRocket(void *d, int flag)
-{
-	HSTREAM h = *((HSTREAM *)d);
-	if (flag) BASS_ChannelPause(h);
-	else BASS_ChannelPlay(h, false);
-}
-
-void SetRocketTime(void *d, int row)
-{
-	HSTREAM h = *((HSTREAM *)d);
-	QWORD pos = BASS_ChannelSeconds2Bytes(h, row / row_rate);
-	BASS_ChannelSetPosition(h, pos, BASS_POS_BYTE);
-}
-
-int IsRocketRunning(void *d)
-{
-	HSTREAM h = *((HSTREAM *)d);
-	return BASS_ChannelIsActive(h) == BASS_ACTIVE_PLAYING;
-}
-
-static double bass_get_row(HSTREAM h)
-{
-	QWORD pos = BASS_ChannelGetPosition(h, BASS_POS_BYTE);
-	double time = BASS_ChannelBytes2Seconds(h, pos);
-	return time * row_rate;
+	GenerateSyncData();
+	WriteSyncData();
+	DEMO::Die();
 }
 
 void main()
@@ -138,16 +56,18 @@ void main()
 	if (!BASS::stream)
 		DEMO::Die(ERR_INIT_BASS);
 
+	Init();
 	InitRocket();
 	Play();
 
 	// Timer driven message loop
 	SetTimer(WINDOW::hWnd, 0, 10, NULL);
 	MSG message;
-	while (GetMessageW(&message, WINDOW::hWnd, 0, 0) != 0)
+	while (GetMessageW(&message, WINDOW::hWnd, 0, 0))
 	{
 		TranslateMessage(&message);
 		DispatchMessageW(&message);
+		UpdateRocket();
 	}
 }
 

@@ -91,8 +91,5 @@ typedef char GLchar;
 GL_LIST
 #undef GLE
 
-typedef PROC WINAPI wglGetProcAddressproc(LPCSTR lpszProc);
-
 #define GLE(ret, name, ...) gl##name = (name##proc *)wglGetProcAddress("gl" #name);
-
 #define init_wrangler() GL_LIST

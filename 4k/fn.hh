@@ -13,32 +13,12 @@ namespace DEMO
 {
 	// Exit gracefully (i.e. die) //
 #ifdef DEBUG_BUILD
-	void Die(int8_t cause)
+	void __fastcall Die(int8_t cause)
 	{
 		if (cause != -1)
 			MessageBox(NULL, error_msg[cause], "Error", MB_OK);
+
 		ExitProcess(0);
-	}
-
-	__forceinline void __fastcall UpdateRocket()
-	{
-		using namespace DEMO;
-
-		double row = bass_get_row(BASS::stream);
-		if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
-			Die();
-
-		time = row * 0.01;
-
-		/* Update values */
-
-		// Camera position
-		RENDER::cx = sync_get_val(ROCKET::tracks[TRACK_CAMX], row);
-		RENDER::cy = sync_get_val(ROCKET::tracks[TRACK_CAMY], row);
-		RENDER::cz = sync_get_val(ROCKET::tracks[TRACK_CAMZ], row);
-		
-		// Alpha
-		RENDER::alpha = sync_get_val(ROCKET::tracks[TRACK_APLHA], row);
 	}
 #else
 	void __fastcall Die()
@@ -51,29 +31,23 @@ namespace DEMO
 
 /* Window functions */
 
+
 #ifdef DEBUG_BUILD
 // Window callback //
 LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
  	static PAINTSTRUCT ps;
 
-	// Make sure to exit process
 	if (uMsg == WM_CHAR)
 	{
 		if (wParam == VK_ESCAPE)
-			DEMO::Die();
+		{
+			Quit();
+		}
 		// Recompile shaders
 		else if (wParam == VK_SPACE)
-			init_gl();
-		else if (wParam == VK_UP)
 		{
-			//RENDER::camPos[0] += 0.1;
-		} else if (wParam == VK_DOWN) {
-
-		} else if (wParam == VK_LEFT) {
-
-		} else if (wParam == VK_RIGHT) {
-
+			init_gl();
 		}
 	}
 	else if (uMsg == WM_PAINT)
@@ -82,19 +56,20 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		BeginPaint(hWnd, &ps);
 		EndPaint(hWnd, &ps);
 	}
-	else if (uMsg == WM_DESTROY)
-		DEMO::Die();
+	else if (uMsg == WM_CLOSE)
+	{
+		Quit();
+	}
 	// Loop code
 	else if (uMsg == WM_TIMER)
 	{
-		DEMO::UpdateRocket();
-
 		BASS_Update(0);
 		Sleep(10);
 
 		SendMessage(hWnd, WM_PAINT, 0, 0);
 	}
-	else return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+
+	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 #else
 
@@ -123,7 +98,6 @@ static const WNDCLASSA wnd = {
 	" ",
 };
 #endif
-
 
 
 static const PIXELFORMATDESCRIPTOR pfd = {
@@ -202,6 +176,7 @@ __forceinline void __fastcall Init()
 			DEMO::Die(ERR_OPEN_WIN);
 #else
 		// Release mode //
+		
 		RegisterClassA(&wnd);
 
 		hWnd = CreateWindowA

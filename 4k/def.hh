@@ -2,8 +2,15 @@
 
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_EXTRA_LEAN
+
 #include <windows.h>
 #include <inttypes.h>
+
+#ifdef DEBUG_BUILD
+#include <cmath>
+#endif
 
 
 /* Error messages */
@@ -58,8 +65,7 @@ namespace DEMO
 {
 	void __fastcall Loop();
 #ifdef DEBUG_BUILD
-	void Die(int8_t cause = -1);
-	__forceinline void __fastcall UpdateRocket();
+	void __fastcall Die(int8_t cause = -1);
 #else
 	__forceinline void __fastcall Die();
 #endif
@@ -69,6 +75,10 @@ namespace DEMO
 
 
 #ifdef DEBUG_BUILD
+
+
+#include "librocket/sync.h"
+#include "bass/c/bass.h"
 
 
 #define EXPORT_TRACK_NAME "track.wav"
@@ -159,3 +169,7 @@ __forceinline void __fastcall Init();
 void __fastcall render_gl();
 void __fastcall init_gl();
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+#ifdef DEBUG_BUILD
+void __fastcall Quit();
+#endif
