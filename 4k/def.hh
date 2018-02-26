@@ -57,8 +57,8 @@ static const char* error_msg[] =
 /* Demo defines */
 
 
-#define WIDTH	800
-#define HEIGHT	600
+#define WIDTH	1366
+#define HEIGHT	768
 
 
 namespace DEMO
@@ -120,7 +120,9 @@ namespace BASS
 
 namespace WINDOW
 {
+#ifdef DEBUG_BUILD
 	HWND hWnd;
+#endif
 };
 
 
@@ -166,10 +168,13 @@ namespace RENDER
 
 
 __forceinline void __fastcall Init();
-void __fastcall render_gl();
-void __fastcall init_gl();
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #ifdef DEBUG_BUILD
 void __fastcall Quit();
+void __fastcall init_gl();
+void __fastcall render_gl();
+#else
+__forceinline void __fastcall init_gl();
+__forceinline void __fastcall render_gl();
 #endif

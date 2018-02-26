@@ -5,19 +5,10 @@
 
 #ifndef DEBUG_BUILD
 
-#pragma code_seg(".extern")
 extern "C"
 {
 	void* _fltused = 0;
 	void* _chkstk = 0;
-	
-	size_t __fastcall m_strlen(const char *str)
-	{
-		size_t length;
-		for (length = 0; *str != '\0'; str++)
-			length++;
-		return length;
-	}
 }
 
 #endif
@@ -32,8 +23,6 @@ extern "C"
 
 void __fastcall Quit()
 {
-	GenerateSyncData();
-	WriteSyncData();
 	DEMO::Die();
 }
 
@@ -73,8 +62,6 @@ void main()
 
 #else
 
-// In release mode, no message loop to save space
-
 #include "asmlib.hh"
 
 void __stdcall WinMainCRTStartup()
@@ -83,16 +70,15 @@ void __stdcall WinMainCRTStartup()
 	Clinkster_GenerateMusic();
 	Clinkster_StartMusic();
 
-	while (1)
+	while (!GetAsyncKeyState(VK_ESCAPE))
 	{
-		if (GetAsyncKeyState(VK_ESCAPE))
-			DEMO::Die();
-
-		if (Clinkster_GetPosition() > Clinkster_MusicLength) DEMO::Die();
+		if (Clinkster_GetPosition() > Clinkster_MusicLength) break;
 		DEMO::time += 0.01;
 		render_gl();
 		Sleep(10);
 	}
+
+	DEMO::Die();
 }
 
 #endif

@@ -1,5 +1,6 @@
 /* Sync stuff */
 
+
 #pragma once
 
 
@@ -123,8 +124,12 @@ void __fastcall UpdateRocket()
 
 /* Sync functions */
 
+
 extern "C"
 {
 	void InitSyncData();
 	float GetSyncValue(int row, char* track);
+
+	void* _SYNC_DATA_START;
+	size_t _SYNC_DATA_SIZE;
 };

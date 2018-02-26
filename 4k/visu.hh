@@ -21,9 +21,8 @@ char* pBuf;
 /* If release, use static shader array */
 #else
 
-#pragma data_seg(".shader")
 #include "auto_pshader.h"
-#include "auto_vshader.h"
+//#include "auto_vshader.h"
 
 #endif
 

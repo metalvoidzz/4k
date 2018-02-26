@@ -21,7 +21,7 @@ namespace DEMO
 		ExitProcess(0);
 	}
 #else
-	void __fastcall Die()
+	__forceinline void __fastcall Die()
 	{
 		ExitProcess(0);
 	}
@@ -102,9 +102,6 @@ LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 #endif
 
-
-// Save some bytes by using a const WNDCLASS
-#ifndef DEBUG_BUILD
 static const WNDCLASSA wnd = {
 	CS_OWNDC,
 	MainWProc,
@@ -117,8 +114,6 @@ static const WNDCLASSA wnd = {
 	NULL,
 	" ",
 };
-#endif
-
 
 static const PIXELFORMATDESCRIPTOR pfd = {
 	sizeof(PIXELFORMATDESCRIPTOR),
@@ -162,18 +157,6 @@ __forceinline void __fastcall Init()
 
 		// Debug mode //
 
-		WNDCLASSA wnd;
-
-		wnd.hInstance = GetModuleHandle(NULL);
-		wnd.style = CS_OWNDC;
-		wnd.lpfnWndProc = MainWProc;
-		wnd.lpszClassName = " ";
-		wnd.cbClsExtra = 0;
-		wnd.cbWndExtra = 0;
-		wnd.hIcon = NULL;
-		wnd.hCursor = NULL;
-		wnd.hbrBackground = NULL;
-
 		if (!RegisterClassA(&wnd))
 			DEMO::Die(ERR_INIT_WINAPI);
 
@@ -199,11 +182,11 @@ __forceinline void __fastcall Init()
 		
 		RegisterClassA(&wnd);
 
-		hWnd = CreateWindowA
+		HWND hWnd = CreateWindowA
 		(
 			" ",
 			"",
-			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
+			WS_VISIBLE | WS_POPUP | WS_SYSMENU,
 			0,
 			0,
 			WIDTH,
@@ -257,72 +240,60 @@ __forceinline void __fastcall init_gl()
 
 	init_wrangler();
 
-	// Set aspect
-	glViewport(0, 0, WIDTH, HEIGHT);
-
 	// Create shaders
-	unsigned short hVS = glCreateShader(GL_VERTEX_SHADER);
-	unsigned short  hPX = glCreateShader(GL_FRAGMENT_SHADER);
+	//unsigned short hVS = glCreateShader(GL_VERTEX_SHADER);
+	unsigned short hPX = glCreateShader(GL_FRAGMENT_SHADER);
 
 #ifdef DEBUG_BUILD
-	p_vshader = fopen(VERTEX_FILE, "r");
+	//p_vshader = fopen(VERTEX_FILE, "r");
 	p_pshader = fopen(PIXEL_FILE, "r");
 	
-	if (p_vshader == NULL || p_pshader == NULL)
-		DEMO::Die(ERR_UNDEFINED);
+	//if (p_vshader == NULL || p_pshader == NULL)
+	//	DEMO::Die(ERR_UNDEFINED);
 
 	// Vertex shader
-	fseek(p_vshader, 0L, SEEK_END);
+	/*fseek(p_vshader, 0L, SEEK_END);
 	long fsize = ftell(p_vshader);
 	rewind(p_vshader);
 	vBuf = (char*)calloc(1, fsize + 1);
 	fread(vBuf, fsize, 1, p_vshader);
-	fclose(p_vshader);
+	fclose(p_vshader);*/
 
 	// Pixel shader
 	fseek(p_pshader, 0L, SEEK_END);
-	fsize = ftell(p_pshader);
+	long fsize = ftell(p_pshader);
 	rewind(p_pshader);
 	pBuf = (char*)calloc(1, fsize + 1);
 	fread(pBuf, fsize, 1, p_pshader);
 	fclose(p_pshader);
 
-	size_t vLen = strlen(vBuf);
+	//size_t vLen = strlen(vBuf);
 	size_t pLen = strlen(pBuf);
 
-	glShaderSource(hVS, 1, &vBuf, (const GLint*)&vLen);
+	//glShaderSource(hVS, 1, &vBuf, (const GLint*)&vLen);
 	glShaderSource(hPX, 1, &pBuf, (const GLint*)&pLen);
 #else
-	size_t vLen = m_strlen(vshader_glsl);
-	size_t pLen = m_strlen(pshader_glsl);
+	
+	//glShaderSource(hVS, 1, &vshader_glsl, NULL);
+	glShaderSource(hPX, 1, &pshader_glsl, NULL);
 
-	glShaderSource(hVS, 1, &vshader_glsl, (const GLint*)&vLen);
-	glShaderSource(hPX, 1, &pshader_glsl, (const GLint*)&pLen);
 #endif
 
 	// Compile shaders
-	glCompileShader(hVS);
+	//glCompileShader(hVS);
 	glCompileShader(hPX);
 
 #ifdef DEBUG_BUILD
-	GLint success[2];
+	GLint success;
 
 	// Check if successful
-	glGetShaderiv(hVS, GL_COMPILE_STATUS, &success[0]);
-	glGetShaderiv(hPX, GL_COMPILE_STATUS, &success[1]);
+	glGetShaderiv(hPX, GL_COMPILE_STATUS, &success);
 
-	if (!success[0] || !success[1])
+	if (!success)
 	{
 		// Get gl output
 		GLint logSize = 0;
 		GLchar* str = (GLchar*)malloc(logSize + 1);
-
-		// Vertex shader
-		glGetShaderiv(hVS, GL_INFO_LOG_LENGTH, &logSize);
-		glGetShaderInfoLog(hVS, logSize, &logSize, &str[0]);
-
-		MessageBoxA(WINDOW::hWnd, str, "Vertex shader output", MB_OK);
-		free(str);
 
 		// Pixel shader
 		glGetShaderiv(hPX, GL_INFO_LOG_LENGTH, &logSize);
@@ -336,7 +307,6 @@ __forceinline void __fastcall init_gl()
 	// Link shaders
 	unsigned short hPr = glCreateProgram();
 
-	glAttachShader(hPr, hVS);
 	glAttachShader(hPr, hPX);
 
 	// Attributes
@@ -346,8 +316,8 @@ __forceinline void __fastcall init_gl()
 
 #ifdef DEBUG_BUILD
 	// Check if linking was successful
-	glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
-	glGetShaderiv(hPX, GL_LINK_STATUS, &success[1]);
+	//glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
+	glGetShaderiv(hPX, GL_LINK_STATUS, &success);
 
 	//if (!success[0] || !success[1])
 	//	DEMO::Die(ERR_SHADER_LNK);
@@ -359,23 +329,28 @@ __forceinline void __fastcall init_gl()
 	// Bind
 	glUseProgram(hPr);
 
+	// Set aspect
+	// glViewport(0, 0, WIDTH, HEIGHT);
+
 	ADD_UNIFORMS
 }
 
 // Render a frame //
+#ifdef DEBUG_BUILD
 void __fastcall render_gl()
+#else
+__forceinline void __fastcall render_gl()
+#endif
 {
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	EVAL_UNIFORMS
 
 	// Render fullscreen quad
 	glBegin(GL_QUADS);
-
-	glVertex2f(-1, 1);
-	glVertex2f(1, 1);
-	glVertex2f(1, -1);
-	glVertex2f(-1, -1);
+	
+	glVertex2i(-1, 1);
+	glVertex2i(1, 1);
+	glVertex2i(1, -1);
+	glVertex2i(-1, -1);
 
 	glEnd();
 	glFlush();
