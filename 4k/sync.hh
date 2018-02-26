@@ -109,24 +109,14 @@ void __fastcall UpdateRocket()
 	RENDER::alpha = sync_get_val(ROCKET::tracks[TRACK_APLHA], row);
 }
 
+#else
 
-/* Sync data generator */
+
+/* Auto-generated sync header */
 
 
-struct SyncData
-{
+#include "auto_sync_data.h"
 
-}sDat;
-
-__forceinline void __fastcall GenerateSyncData()
-{
-
-}
-
-__forceinline void __fastcall WriteSyncData()
-{
-
-}
 
 #endif
 

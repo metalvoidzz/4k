@@ -5,9 +5,9 @@
 uniform float u_time;
 uniform float u_alpha;
 //uniform vec3 u_cam;
-uniform int u_x;
-uniform int u_y;
-uniform int u_z;
+uniform float u_x;
+uniform float u_y;
+uniform float u_z;
 
 
 #define WIDTH 800

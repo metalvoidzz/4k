@@ -149,16 +149,16 @@ namespace RENDER
 #define EVAL_UNIFORMS \
 	glUniform1f(RENDER::uLoc[UNIF_UTIME], DEMO::time); \
 	glUniform1f(RENDER::uLoc[UNIF_ALPHA], RENDER::alpha); \
-	glUniform1i(RENDER::uLoc[2], RENDER::cx); \
-	glUniform1i(RENDER::uLoc[3], RENDER::cy); \
-	glUniform1i(RENDER::uLoc[4], RENDER::cz); \
+	glUniform1f(RENDER::uLoc[2], RENDER::cx); \
+	glUniform1f(RENDER::uLoc[3], RENDER::cy); \
+	glUniform1f(RENDER::uLoc[4], RENDER::cz); \
 
 
 	int uLoc[NUM_UNIF]; //Uniform locations
 
 	float alpha = 0.0;
 	float camPos[3];
-	int cx, cy, cz;
+	float cx, cy, cz;
 };
 
 

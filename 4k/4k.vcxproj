@@ -97,7 +97,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreLinkEvent>
-      <Command>..\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
+      <Command>C:\Python27\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
 ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj
 ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj</Command>
       <Message>Compiling music data</Message>
@@ -164,7 +164,7 @@ crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj 4
       <Message>Linking final intro, get hyped!</Message>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>..\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
+      <Command>python ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
 ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj
 ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj
 ..\nasmw -f win32 lib.asm -o lib.obj</Command>
@@ -173,7 +173,8 @@ crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj 4
     <PreBuildEvent>
       <Command>cd ..\
 shader_minifier.exe --preserve-externals Debug\vshader.glsl -o 4k\auto_vshader.h
-shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h</Command>
+shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h
+Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

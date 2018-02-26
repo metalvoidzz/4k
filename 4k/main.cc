@@ -63,10 +63,10 @@ void main()
 	// Timer driven message loop
 	SetTimer(WINDOW::hWnd, 0, 10, NULL);
 	MSG message;
-	while (GetMessageW(&message, WINDOW::hWnd, 0, 0))
+	while (GetMessageA(&message, WINDOW::hWnd, 0, 0))
 	{
 		TranslateMessage(&message);
-		DispatchMessageW(&message);
+		DispatchMessageA(&message);
 		UpdateRocket();
 	}
 }

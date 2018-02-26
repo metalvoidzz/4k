@@ -34,13 +34,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Object Include="lib.obj">
+      <Filter>src\data</Filter>
+    </Object>
     <Object Include="..\music_here\clinkster.obj">
       <Filter>src\data</Filter>
     </Object>
     <Object Include="..\music_here\music.obj">
-      <Filter>src\data</Filter>
-    </Object>
-    <Object Include="lib.obj">
       <Filter>src\data</Filter>
     </Object>
   </ItemGroup>

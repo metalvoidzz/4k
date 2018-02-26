@@ -38,7 +38,7 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
  	static PAINTSTRUCT ps;
 
-	if (uMsg == WM_CHAR)
+	if (uMsg == WM_KEYDOWN)
 	{
 		if (wParam == VK_ESCAPE)
 		{
@@ -48,6 +48,26 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else if (wParam == VK_SPACE)
 		{
 			init_gl();
+		}
+		// W
+		else if (wParam == 0x57)
+		{
+			RENDER::cz += 1;
+		}
+		// A
+		else if (wParam == 0x41)
+		{
+			RENDER::cy -= 1;
+		}
+		// S
+		else if (wParam == 0x53)
+		{
+			RENDER::cz -= 1;
+		}
+		// D
+		else if (wParam == 0x44)
+		{
+			RENDER::cy += 1;
 		}
 	}
 	else if (uMsg == WM_PAINT)
@@ -329,8 +349,8 @@ __forceinline void __fastcall init_gl()
 	glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
 	glGetShaderiv(hPX, GL_LINK_STATUS, &success[1]);
 
-	if (!success[0] || !success[1])
-		DEMO::Die(ERR_SHADER_LNK);
+	//if (!success[0] || !success[1])
+	//	DEMO::Die(ERR_SHADER_LNK);
 
 	// Validate
 	glValidateProgram(hPr);
