@@ -9,14 +9,23 @@ extern "C"
 {
 	void* _fltused = 0;
 	void* _chkstk = 0;
+
+	void m_memcpy(void *dest, void *src, size_t n)
+	{
+		char *csrc = (char *)src;
+		char *cdest = (char *)dest;
+
+		for (int i = 0; i<n; i++)
+			cdest[i] = csrc[i];
+	}
 }
 
 #endif
 
 
 #include "clinkster.h"
+#define SYNC_PRECALC_DATA
 #include "fn.hh"
-#include "sync.hh"
 
 
 #ifdef DEBUG_BUILD

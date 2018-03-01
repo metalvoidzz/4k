@@ -4,6 +4,7 @@
 
 #include "def.hh"
 #include "visu.hh"
+#include "sync.hh"
 
 
 /* Demo functions */
@@ -221,6 +222,11 @@ __forceinline void __fastcall Init()
 #endif
 	}
 
+#if defined(SYNC_PRECALC_DATA) && !defined(DEBUG_BUILD)
+	// Init sync data
+	PrecalcSyncData();
+#endif
+
 	// Init OpenGL
 	init_gl();
 }
@@ -346,7 +352,7 @@ __forceinline void __fastcall render_gl()
 
 	// Render fullscreen quad
 	glBegin(GL_QUADS);
-	
+
 	glVertex2i(-1, 1);
 	glVertex2i(1, 1);
 	glVertex2i(1, -1);

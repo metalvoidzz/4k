@@ -73,6 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,24 +158,17 @@
       <SectionAlignment>0</SectionAlignment>
     </Link>
     <PostBuildEvent>
-      <Command>cd ..
-crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj 4k\lib.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:intro.exe /TINYHEADER /TINYIMPORT /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE</Command>
+      <Command>cd .. &amp;&amp; crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj data_here\lib.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:intro.exe /TINYHEADER /TINYIMPORT /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Linking final intro, get hyped!</Message>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>python ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
-..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj
-..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj
-..\nasmw -f win32 lib.asm -o lib.obj</Command>
+      <Command>python ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm &amp;&amp; ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj &amp;&amp; ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj &amp;&amp; ..\nasmw -f win32 lib.asm -o ..\data_here\lib.obj</Command>
       <Message>Compiling music</Message>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>cd ..\
-shader_minifier.exe --preserve-externals Debug\vshader.glsl -o 4k\auto_vshader.h
-shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h
-Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
+      <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-externals data_here\vshader.glsl -o 4k\auto_vshader.h &amp;&amp; shader_minifier.exe --preserve-externals data_here\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -195,26 +189,20 @@ Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asmlib.hh" />
-    <ClInclude Include="clinkster.h" />
     <ClInclude Include="def.hh" />
     <ClInclude Include="fn.hh" />
     <ClInclude Include="sync.hh" />
     <ClInclude Include="visu.hh" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="clinkster.asm">
-      <FileType>Document</FileType>
-    </None>
     <None Include="lib.asm">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Object Include="..\data_here\lib.obj" />
     <Object Include="..\music_here\clinkster.obj" />
     <Object Include="..\music_here\music.obj" />
-    <Object Include="lib.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

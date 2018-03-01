@@ -4,8 +4,8 @@
     <Filter Include="src">
       <UniqueIdentifier>{352f2ca0-2c4b-4eb8-b2d6-6ffea95f289c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\data">
-      <UniqueIdentifier>{2b1961c6-bc36-4c7e-8261-0bf4de843ebc}</UniqueIdentifier>
+    <Filter Include="src\Data">
+      <UniqueIdentifier>{f56a15c5-a8d6-4029-9c2a-0c141b1be600}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -21,9 +21,6 @@
     <ClInclude Include="sync.hh">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="clinkster.h">
-      <Filter>src\data</Filter>
-    </ClInclude>
     <ClInclude Include="asmlib.hh">
       <Filter>src</Filter>
     </ClInclude>
@@ -34,22 +31,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Object Include="lib.obj">
-      <Filter>src\data</Filter>
-    </Object>
-    <Object Include="..\music_here\clinkster.obj">
-      <Filter>src\data</Filter>
-    </Object>
-    <Object Include="..\music_here\music.obj">
-      <Filter>src\data</Filter>
-    </Object>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="clinkster.asm">
-      <Filter>src\data</Filter>
-    </None>
     <None Include="lib.asm">
       <Filter>src</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\music_here\clinkster.obj">
+      <Filter>src\Data</Filter>
+    </Object>
+    <Object Include="..\music_here\music.obj">
+      <Filter>src\Data</Filter>
+    </Object>
+    <Object Include="..\data_here\lib.obj">
+      <Filter>src\Data</Filter>
+    </Object>
   </ItemGroup>
 </Project>

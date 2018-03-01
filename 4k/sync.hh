@@ -119,17 +119,44 @@ void __fastcall UpdateRocket()
 #include "auto_sync_data.h"
 
 
+namespace SYNC_DATA
+{
+#ifdef SYNC_PRECALC_DATA
+	float vals[NUM_ROWS * sizeof(float) * NUM_EVENTS];
 #endif
+	void* bindings[NUM_EVENTS];
+}
 
 
 /* Sync functions */
 
 
-extern "C"
-{
-	void InitSyncData();
-	float GetSyncValue(int row, char* track);
+#include "def.hh"
 
-	void* _SYNC_DATA_START;
-	size_t _SYNC_DATA_SIZE;
-};
+
+#ifdef SYNC_PRECALC_DATA
+// Pull data out of compressed sync file
+// Increases performance and preload times
+__forceinline void __fastcall PrecalcSyncData()
+{
+	using namespace SYNC_DATA;
+
+	// Precalc tracks
+	for (int t; t < NUM_TRACKS; t++)
+	{
+		// Precalc keys
+		for (int i; i < NUM_EVENTS; i++)
+		{
+			SyncKey* k = &sync_data[i];
+			vals[t * (k->time)] = k->value;
+		}
+	}
+}
+#endif
+
+float __fastcall GetSyncValue(unsigned char index)
+{
+	return SYNC_DATA::vals[index * DEMO::row];
+}
+
+#endif

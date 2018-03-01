@@ -71,6 +71,7 @@ namespace DEMO
 #endif
 
 	float time = 0.0;
+	unsigned int row = 0;
 };
 
 
@@ -137,23 +138,24 @@ namespace RENDER
 
 #define UNIF_UTIME	0
 #define UNIF_ALPHA	1
-#define UNIF_CAM	2
+#define UNIF_CAMX	2
+#define UNIF_CAMY	3
+#define UNIF_CAMZ	4
 
 
 #define ADD_UNIFORMS \
 	uLoc[UNIF_UTIME] = glGetUniformLocation(hPr, "u_time"); \
 	uLoc[UNIF_ALPHA] = glGetUniformLocation(hPr, "u_alpha"); \
-	uLoc[2] = glGetUniformLocation(hPr, "u_x"); \
-	uLoc[3] = glGetUniformLocation(hPr, "u_y"); \
-	uLoc[4] = glGetUniformLocation(hPr, "u_z"); \
-	//uLoc[UNIF_CAM] = glGetUniformLocation(hPr, "u_cam"); \
+	uLoc[UNIF_CAMX] = glGetUniformLocation(hPr, "u_x"); \
+	uLoc[UNIF_CAMY] = glGetUniformLocation(hPr, "u_y"); \
+	uLoc[UNIF_CAMZ] = glGetUniformLocation(hPr, "u_z"); \
 
 #define EVAL_UNIFORMS \
 	glUniform1f(RENDER::uLoc[UNIF_UTIME], DEMO::time); \
 	glUniform1f(RENDER::uLoc[UNIF_ALPHA], RENDER::alpha); \
-	glUniform1f(RENDER::uLoc[2], RENDER::cx); \
-	glUniform1f(RENDER::uLoc[3], RENDER::cy); \
-	glUniform1f(RENDER::uLoc[4], RENDER::cz); \
+	glUniform1f(RENDER::uLoc[UNIF_CAMX], RENDER::cx); \
+	glUniform1f(RENDER::uLoc[UNIF_CAMY], RENDER::cy); \
+	glUniform1f(RENDER::uLoc[UNIF_CAMZ], RENDER::cz); \
 
 
 	int uLoc[NUM_UNIF]; //Uniform locations
