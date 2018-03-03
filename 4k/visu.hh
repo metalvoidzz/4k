@@ -26,7 +26,6 @@ char* pBuf;
 
 #endif
 
-#define GLDECL WINAPI
 #define NOMINMAX
 
 typedef char GLchar;
@@ -86,7 +85,7 @@ typedef char GLchar;
 	GLE(void, UseProgram, GLuint program)
 #endif
 
-#define GLE(ret, name, ...) typedef ret GLDECL name##proc(__VA_ARGS__); extern name##proc * gl##name; name##proc * gl##name;
+#define GLE(ret, name, ...) typedef ret WINAPI name##proc(__VA_ARGS__); extern name##proc * gl##name; name##proc * gl##name;
 GL_LIST
 #undef GLE
 

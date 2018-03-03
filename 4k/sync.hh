@@ -93,38 +93,26 @@ void __fastcall UpdateRocket()
 {
 	using namespace DEMO;
 
-	double row = bass_get_row(BASS::stream);
+	DEMO::row = bass_get_row(BASS::stream);
 	if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
 		Die();
 
 	time = row * 0.01;
+}
 
-	/* Update values */
-
-	// Camera position
-	RENDER::cx = sync_get_val(ROCKET::tracks[TRACK_CAMX], row);
-	RENDER::cy = sync_get_val(ROCKET::tracks[TRACK_CAMY], row);
-	RENDER::cz = sync_get_val(ROCKET::tracks[TRACK_CAMZ], row);
-
-	// Alpha
-	RENDER::alpha = sync_get_val(ROCKET::tracks[TRACK_APLHA], row);
+float __fastcall GetSyncValue(unsigned char index)
+{
+	return sync_get_val(ROCKET::tracks[index], DEMO::row);
 }
 
 #else
 
 
-/* Auto-generated sync header */
-
-
-#include "auto_sync_data.h"
-
-
 namespace SYNC_DATA
 {
 #ifdef SYNC_PRECALC_DATA
-	float vals[NUM_ROWS * sizeof(float) * NUM_EVENTS];
+	float data[NUM_TRACKS][NUM_ROWS] = { 0.0 };
 #endif
-	void* bindings[NUM_EVENTS];
 }
 
 
@@ -135,28 +123,21 @@ namespace SYNC_DATA
 
 
 #ifdef SYNC_PRECALC_DATA
+
+using namespace SYNC_DATA;
+
 // Pull data out of compressed sync file
-// Increases performance and preload times
 __forceinline void __fastcall PrecalcSyncData()
 {
-	using namespace SYNC_DATA;
-
-	// Precalc tracks
-	for (int t; t < NUM_TRACKS; t++)
-	{
-		// Precalc keys
-		for (int i; i < NUM_EVENTS; i++)
-		{
-			SyncKey* k = &sync_data[i];
-			vals[t * (k->time)] = k->value;
-		}
-	}
+	for (int i = 0; i < NUM_EVENTS; i++)
+		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
 }
-#endif
 
-float __fastcall GetSyncValue(unsigned char index)
+float __fastcall GetSyncValue(int index)
 {
-	return SYNC_DATA::vals[index * DEMO::row];
+	return data[index][DEMO::row];
 }
+
+#endif
 
 #endif

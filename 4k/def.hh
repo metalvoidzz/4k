@@ -60,6 +60,9 @@ static const char* error_msg[] =
 #define WIDTH	1366
 #define HEIGHT	768
 
+//#define WIDTH	1920
+//#define HEIGHT	1080
+
 
 namespace DEMO
 {
@@ -85,12 +88,6 @@ namespace DEMO
 #define EXPORT_TRACK_NAME "track.wav"
 
 
-#define NUM_TRACKS		4
-
-#define TRACK_CAMX		0
-#define TRACK_CAMY		1
-#define TRACK_CAMZ		2
-#define TRACK_APLHA		3
 namespace ROCKET
 {
 	// Sync device
@@ -98,13 +95,16 @@ namespace ROCKET
 	// Sync callback
 	sync_cb cb;
    	// Sync tracks
-	const struct sync_track* tracks[NUM_TRACKS];
-	const char* trackNames[NUM_TRACKS] = {
+	const char* trackNames[] = {
 		"CamX",
 		"CamY",
 		"CamZ",
 		"Alpha",
 	};
+	const struct sync_track* tracks[sizeof(trackNames) / sizeof(trackNames[0])];
+
+#define NUM_TRACKS sizeof(trackNames) / sizeof(trackNames[0])
+
 };
 
 namespace BASS
@@ -142,6 +142,10 @@ namespace RENDER
 #define UNIF_CAMY	3
 #define UNIF_CAMZ	4
 
+#define TRACK_CAMX 0
+#define TRACK_CAMY 1
+#define TRACK_CAMZ 2
+#define TRACK_ALPHA 3
 
 #define ADD_UNIFORMS \
 	uLoc[UNIF_UTIME] = glGetUniformLocation(hPr, "u_time"); \
@@ -152,17 +156,13 @@ namespace RENDER
 
 #define EVAL_UNIFORMS \
 	glUniform1f(RENDER::uLoc[UNIF_UTIME], DEMO::time); \
-	glUniform1f(RENDER::uLoc[UNIF_ALPHA], RENDER::alpha); \
-	glUniform1f(RENDER::uLoc[UNIF_CAMX], RENDER::cx); \
-	glUniform1f(RENDER::uLoc[UNIF_CAMY], RENDER::cy); \
-	glUniform1f(RENDER::uLoc[UNIF_CAMZ], RENDER::cz); \
+	glUniform1f(RENDER::uLoc[UNIF_ALPHA], GetSyncValue(TRACK_ALPHA)); \
+	glUniform1f(RENDER::uLoc[UNIF_CAMX], GetSyncValue(TRACK_CAMX)); \
+	glUniform1f(RENDER::uLoc[UNIF_CAMY], GetSyncValue(TRACK_CAMY)); \
+	glUniform1f(RENDER::uLoc[UNIF_CAMZ], GetSyncValue(TRACK_CAMZ)); \
 
 
 	int uLoc[NUM_UNIF]; //Uniform locations
-
-	float alpha = 0.0;
-	float camPos[3];
-	float cx, cy, cz;
 };
 
 

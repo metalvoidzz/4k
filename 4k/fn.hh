@@ -50,26 +50,6 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			init_gl();
 		}
-		// W
-		else if (wParam == 0x57)
-		{
-			RENDER::cz += 1;
-		}
-		// A
-		else if (wParam == 0x41)
-		{
-			RENDER::cy -= 1;
-		}
-		// S
-		else if (wParam == 0x53)
-		{
-			RENDER::cz -= 1;
-		}
-		// D
-		else if (wParam == 0x44)
-		{
-			RENDER::cy += 1;
-		}
 	}
 	else if (uMsg == WM_PAINT)
 	{
@@ -146,7 +126,6 @@ static const PIXELFORMATDESCRIPTOR pfd = {
 };
 
 
-
 // Init demo //
 __forceinline void __fastcall Init()
 {
@@ -187,7 +166,7 @@ __forceinline void __fastcall Init()
 		(
 			" ",
 			"",
-			WS_VISIBLE | WS_POPUP | WS_SYSMENU,
+			WS_VISIBLE,
 			0,
 			0,
 			WIDTH,
@@ -336,7 +315,7 @@ __forceinline void __fastcall init_gl()
 	glUseProgram(hPr);
 
 	// Set aspect
-	// glViewport(0, 0, WIDTH, HEIGHT);
+	//glViewport(0, 0, WIDTH, HEIGHT);
 
 	ADD_UNIFORMS
 }

@@ -18,8 +18,24 @@ extern "C"
 		for (int i = 0; i<n; i++)
 			cdest[i] = csrc[i];
 	}
+
+	void _ftol2()
+	{
+		__asm
+		{
+			fistp qword ptr[esp - 8]
+			mov edx, [esp - 4]
+			mov eax, [esp - 8]
+			ret
+		}
+	}
 }
 
+#endif
+
+
+#ifndef DEBUG_BUILD
+#include "auto_sync_data.h"
 #endif
 
 
@@ -83,6 +99,7 @@ void __stdcall WinMainCRTStartup()
 	{
 		if (Clinkster_GetPosition() > Clinkster_MusicLength) break;
 		DEMO::time += 0.01;
+		DEMO::row = DEMO::time / 0.01;
 		render_gl();
 		Sleep(10);
 	}
