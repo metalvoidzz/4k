@@ -4,22 +4,27 @@
 // Uniforms
 uniform float u_time;
 uniform float u_alpha;
-//uniform vec3 u_cam;
+uniform float u_scene;
+// Camera position
 uniform float u_x;
 uniform float u_y;
 uniform float u_z;
+// Light position
+uniform float u_lx;
+uniform float u_ly;
+uniform float u_lz;
 
 
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 1366
+#define HEIGHT 768
 
 #define PI 3.141592
 #define MAX_ITER 255
-#define MAX_DIST 100.0
+#define MAX_DIST 200.0
+#define AMBIENT_LIGHT 0.5
 #define EPSILON 0.0001
 #define OMEGA 1.2
 #define WH vec2(WIDTH, HEIGHT)
-
 
 
 
@@ -57,7 +62,6 @@ mat3 rotateZ(float theta) {
 
 
 
-
 float sphereSDF(vec3 p, float s)
 {
 	return length(p)-s;
@@ -70,7 +74,8 @@ float max3(vec3 v)
 
 float cubeSDF(vec3 p, vec3 b)
 {
-	return max3(abs(p) - b);
+  vec3 d = abs(p) - b;
+  return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
 }
 
 float torusSDF(vec3 p, vec2 t)
@@ -108,40 +113,75 @@ float Combine(float d1, float d2, float r)
 
 #define Repeat(p, c) mod(p, c)-0.5*c
 	
+// rotate space
+void sR(inout vec2 p, float a)
+{
+	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
+}
+	
 
 float sceneSDF(vec3 p)
 {
-	float torus = torusSDF(p, vec2(cos(sin(u_time))*2,0.1));
-
-	return min(torus, sphereSDF(p, 0.3));
+	if(u_scene == 0)
+	{
+		// Wall 1 
+		//sR(p.xy, 0.7);
+		float w1 = cubeSDF(p, vec3(0.01,1.6,8));
+		
+		p.x += 3;
+		
+		// Wall2
+		float w2 = cubeSDF(p, vec3(0.01,1.6,8));
+		
+		
+		float walls = min(w1, w2);
+		
+		p.x -= 1.5;
+		float box = cubeSDF(p, vec3(0.2,0.2,0.2));
+		
+		
+		float scene = min(walls, box);
+		
+		return scene;
+	}else if(u_scene == 1) {
+		return MAX_DIST;
+	}
 }
-
-
 
 float raymarch(vec3 eye, vec3 dir)
 {
-    float depth = 0.0;
-    for (int i = 0; i < MAX_ITER; i++)
+	float t=0.0;
+	float d=1.0;
+	float pd=10.0;
+	float os=0.0;
+	
+	for(int i = 0; i < MAX_ITER; i++)
 	{
-        float dist = sceneSDF(eye + depth * dir);
-        if (dist < EPSILON)
-			return depth;
-        depth += dist;
-        if (depth >= MAX_DIST)
-            break;
-    }
-    return MAX_DIST;
+		d=sceneSDF(eye + t * dir);
+		if(d > os)
+		{
+			os = d * min(1.0, 0.5 * d / pd);
+			t += d + os;
+			pd = d;
+		}else {
+			t -= os;
+			pd = 100000.0;
+			d = 0.1;
+			os = 0.0;
+		}
+		if(t > MAX_DIST || d < 0.0) return MAX_DIST;
+	}
+	
+	return t;
 }
 
-vec3 rayDirection(float fov, vec2 size)
-{
-    vec2 xy = gl_FragCoord.xy - size / 2.0;
-    float z = size.y / tan(radians(fov) / 2.0);
+vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
+    vec2 xy = fragCoord - size / 2.0;
+    float z = size.y / tan(radians(fieldOfView) / 2.0);
     return normalize(vec3(xy, -z));
 }
 
-vec3 estimateNormal(vec3 p)
-{
+vec3 estimateNormal(vec3 p) {
     return normalize(vec3(
         sceneSDF(vec3(p.x + EPSILON, p.y, p.z)) - sceneSDF(vec3(p.x - EPSILON, p.y, p.z)),
         sceneSDF(vec3(p.x, p.y + EPSILON, p.z)) - sceneSDF(vec3(p.x, p.y - EPSILON, p.z)),
@@ -149,25 +189,11 @@ vec3 estimateNormal(vec3 p)
     ));
 }
 
-mat4 viewMatrix(vec3 eye, vec3 center, vec3 up)
-{
-    vec3 f = normalize(center - eye);
-    vec3 s = normalize(cross(f, up));
-    vec3 u = cross(s, f);
-    return mat4(
-        vec4(s, 0.0),
-        vec4(u, 0.0),
-        vec4(-f, 0.0),
-        vec4(0.0, 0.0, 0.0, 1)
-    );
-}
-
 vec3 SkyColor(vec3 e)
 {
     e.y = max(e.y, 0.0);
     return vec3(pow(1.0-e.y,2.0), 1.0-e.y, .6+(1.0-e.y) * .4);
 }
-
 
 vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec3 lightPos, vec3 lightIntensity)
 {
@@ -191,27 +217,28 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
 
 vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye)
 {
-    const vec3 ambientLight = 0.2 * vec3(1.0, 1.0, 1.0);
+    const vec3 ambientLight = AMBIENT_LIGHT * vec3(1.0, 1.0, 1.0);
     vec3 color = ambientLight * k_a;
     
-    vec3 light1Pos = vec3(4.0 * sin(u_time) * 3,
-                          2.0,
-                          4.0 * cos(u_time)) * 3;
-    vec3 light1Intensity = vec3(0.4, 0.4, 0.4);
+    vec3 lightPos = vec3(u_lx, u_ly, u_lz);
+    vec3 lightIntensity = vec3(0.4, 0.4, 0.4);
     
-    color += phongContribForLight(k_d, k_s, alpha, p, eye,
-                                  light1Pos,
-                                  light1Intensity);
-    
-    vec3 light2Pos = vec3(2.0 * sin(0.37 * u_time) * 3,
-                          2.0 * cos(0.37 * u_time) * 3,
-                          2.0);
-    vec3 light2Intensity = vec3(0.4, 0.4, 0.4);
-    
-    color += phongContribForLight(k_d, k_s, alpha, p, eye,
-                                  light2Pos,
-                                  light2Intensity);    
+    color += phongContribForLight(k_d, k_s, alpha, p, eye, lightPos, lightIntensity);
+								  
     return color;
+}
+
+mat4 viewMatrix(vec3 eye, vec3 center, vec3 up)
+{
+    vec3 f = normalize(center - eye);
+    vec3 s = normalize(cross(f, up));
+    vec3 u = cross(s, f);
+    return mat4(
+        vec4(s, 0.0),
+        vec4(u, 0.0),
+        vec4(-f, 0.0),
+        vec4(0.0, 0.0, 0.0, 1)
+    );
 }
 
 void main()
@@ -220,10 +247,10 @@ void main()
     uv = uv * 2.0 - 1.0;
     uv.x *= WIDTH / HEIGHT;
 	
-	vec3 viewDir = rayDirection(45.0, WH);
+	vec3 viewDir = rayDirection(45.0, WH,gl_FragCoord.xy);
     
-	vec3 eye = vec3(8.0, 5.0, 1.0);
-    mat4 viewToWorld = viewMatrix(eye, vec3(u_x, u_y, u_z), vec3(0.0, 1.0, 0.0));
+	vec3 eye = vec3(u_x, u_y, u_z);
+    mat4 viewToWorld = viewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
     vec3 worldDir = (viewToWorld * vec4(viewDir, 0.0)).xyz;
 	
     float dist = raymarch(eye, worldDir);
@@ -236,7 +263,7 @@ void main()
         gl_FragColor = vec4(SkyColor(dir) - u_alpha, 0.0);
 		return;
     }
-	
+
     vec3 p = eye + dist * worldDir;
     
     vec3 K_a = vec3(0.2, 0.2, 0.2);
@@ -244,10 +271,18 @@ void main()
     vec3 K_s = vec3(1.0, 1.0, 1.0);
     float shininess = 10.0;
     
-    vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
+	vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
 	
-    gl_FragColor = vec4(color - u_alpha, 1.0);	
+    gl_FragColor = vec4(color - u_time, 1.0);	
 }
+
+
+
+
+
+
+
+
 
 
 

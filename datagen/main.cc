@@ -84,7 +84,7 @@ std::string GenerateHeader()
 		str += "#define " + s + " " + std::to_string(i) + "\n";
 	}
 	str += "\n";*/
-	
+
 	// Key definition
 	str += "\ntypedef struct SyncKey\n";
 	str += "{\n";

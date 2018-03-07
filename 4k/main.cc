@@ -40,7 +40,7 @@ extern "C"
 
 
 #include "clinkster.h"
-#define SYNC_PRECALC_DATA
+//#define SYNC_PRECALC_DATA
 #include "fn.hh"
 
 
@@ -70,18 +70,16 @@ void main()
 	if (!BASS::stream)
 		DEMO::Die(ERR_INIT_BASS);
 
-	Init();
 	InitRocket();
+	Init();
 	Play();
 
-	// Timer driven message loop
 	SetTimer(WINDOW::hWnd, 0, 10, NULL);
 	MSG message;
 	while (GetMessageA(&message, WINDOW::hWnd, 0, 0))
 	{
 		TranslateMessage(&message);
 		DispatchMessageA(&message);
-		UpdateRocket();
 	}
 }
 
@@ -95,12 +93,19 @@ void __stdcall WinMainCRTStartup()
 	Clinkster_GenerateMusic();
 	Clinkster_StartMusic();
 
-	while (!GetAsyncKeyState(VK_ESCAPE))
+	MSG message;
+	while (GetMessageA(&message, WINDOW::hWnd, 0, 0))
 	{
-		if (Clinkster_GetPosition() > Clinkster_MusicLength) break;
-		DEMO::time += 0.01;
+		TranslateMessage(&message);
+		DispatchMessageA(&message);
+		
+		DEMO::time = Clinkster_GetPosition() / Clinkster_TicksPerSecond;
 		DEMO::row = DEMO::time / 0.01;
+
+		if (Clinkster_GetPosition() > Clinkster_MusicLength) break;
+		
 		render_gl();
+
 		Sleep(10);
 	}
 

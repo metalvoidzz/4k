@@ -34,11 +34,12 @@ namespace DEMO
 
 
 #ifdef DEBUG_BUILD
+
 // Window callback //
 LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
- 	static PAINTSTRUCT ps;
-
+	static PAINTSTRUCT ps;
+	
 	if (uMsg == WM_KEYDOWN)
 	{
 		if (wParam == VK_ESCAPE)
@@ -50,33 +51,57 @@ LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			init_gl();
 		}
-	}
-	else if (uMsg == WM_PAINT)
-	{
-		render_gl();
-		BeginPaint(hWnd, &ps);
-		EndPaint(hWnd, &ps);
+		/*else if(wParam == 0x57 && RENDER::ctrlCam)
+		{
+			RENDER::cz += 0.1;
+		}
+		else if(wParam == 0x41 && RENDER::ctrlCam)
+		{
+			RENDER::cx += 0.1;
+		}
+		else if(wParam == 0x53 && RENDER::ctrlCam)
+		{
+			RENDER::cz -= 0.1;
+		}
+		else if(wParam == 0x44 && RENDER::ctrlCam)
+		{
+			RENDER::cx -= 0.1;
+		}
+		else if (wParam == VK_TAB)
+		{
+			RENDER::ctrlCam = !RENDER::ctrlCam;
+		}*/
 	}
 	else if (uMsg == WM_CLOSE)
 	{
 		Quit();
 	}
-	// Loop code
 	else if (uMsg == WM_TIMER)
 	{
+		UpdateRocket();
+
+		render_gl();
+
+		BeginPaint(WINDOW::hWnd, &ps);
+		EndPaint(WINDOW::hWnd, &ps);
+
 		BASS_Update(0);
 		Sleep(10);
-
-		SendMessage(hWnd, WM_PAINT, 0, 0);
 	}
 
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
+
 #else
 
 
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (uMsg == WM_KEYDOWN && wParam == VK_ESCAPE)
+	{
+		DEMO::Die();
+	}
+
 	return 1;
 }
 
@@ -162,11 +187,11 @@ __forceinline void __fastcall Init()
 		
 		RegisterClassA(&wnd);
 
-		HWND hWnd = CreateWindowA
+		hWnd = CreateWindowA
 		(
 			" ",
 			"",
-			WS_VISIBLE,
+			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
 			0,
 			0,
 			WIDTH,
@@ -178,6 +203,9 @@ __forceinline void __fastcall Init()
 		);
 #endif
 
+		// Hide cursor
+		ShowCursor(0);
+		
 		// Context
 		HDC hDC = GetDC(hWnd);
 
@@ -315,7 +343,7 @@ __forceinline void __fastcall init_gl()
 	glUseProgram(hPr);
 
 	// Set aspect
-	//glViewport(0, 0, WIDTH, HEIGHT);
+	glViewport(0, 0, WIDTH, HEIGHT);
 
 	ADD_UNIFORMS
 }

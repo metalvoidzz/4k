@@ -138,7 +138,6 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalOptions>/QIFist %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -168,7 +167,7 @@
       <Message>Compiling music</Message>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-externals data_here\vshader.glsl -o 4k\auto_vshader.h &amp;&amp; shader_minifier.exe --preserve-externals data_here\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
+      <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

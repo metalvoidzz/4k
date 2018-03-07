@@ -4,6 +4,11 @@
 #pragma once
 
 
+static const float bpm = 210.0f;
+static const int rpb = 8;
+static const double row_rate = (double(bpm) / 60) * rpb;
+
+
 #ifdef DEBUG_BUILD
 
 
@@ -14,11 +19,6 @@
 #include "bass/c/bass.h"
 
 #include "def.hh"
-
-
-static const float bpm = 210.0f;
-static const int rpb = 8;
-static const double row_rate = (double(bpm) / 60) * rpb;
 
 
 void __fastcall InitRocket();
@@ -72,12 +72,13 @@ void SetRocketTime(void *d, int row)
 int IsRocketRunning(void *d)
 {
 	HSTREAM h = *((HSTREAM *)d);
-	return BASS_ChannelIsActive(h) == BASS_ACTIVE_PLAYING;
+   
+	ROCKET::up = BASS_ChannelIsActive(h) == BASS_ACTIVE_PLAYING;
+	return ROCKET::up;
 }
 
 void __fastcall Play()
 {
-	// Play track from hd
 	BASS_Start();
 	BASS_ChannelPlay(BASS::stream, false);
 }
@@ -93,7 +94,7 @@ void __fastcall UpdateRocket()
 {
 	using namespace DEMO;
 
-	DEMO::row = bass_get_row(BASS::stream);
+	row = bass_get_row(BASS::stream);
 	if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
 		Die();
 
@@ -110,9 +111,7 @@ float __fastcall GetSyncValue(unsigned char index)
 
 namespace SYNC_DATA
 {
-#ifdef SYNC_PRECALC_DATA
-	float data[NUM_TRACKS][NUM_ROWS] = { 0.0 };
-#endif
+	float vals[NUM_TRACKS] = { 0.0 };
 }
 
 
@@ -122,22 +121,28 @@ namespace SYNC_DATA
 #include "def.hh"
 
 
-#ifdef SYNC_PRECALC_DATA
-
 using namespace SYNC_DATA;
 
 // Pull data out of compressed sync file
 __forceinline void __fastcall PrecalcSyncData()
 {
-	for (int i = 0; i < NUM_EVENTS; i++)
+	/*for (int i = 0; i < NUM_EVENTS; i++)
+	{
 		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
+		//todo
+	}*/
 }
 
 float __fastcall GetSyncValue(int index)
 {
-	return data[index][DEMO::row];
-}
+	// todo
+	for (int i; i < NUM_EVENTS; i++)
+	{
+		if (sync_data[i].track == index && sync_data[i].time == DEMO::row)
+			vals[index] = sync_data[i].value;
+	}
 
-#endif
+	return vals[index];
+}
 
 #endif
