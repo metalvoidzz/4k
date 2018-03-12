@@ -34,7 +34,6 @@ void __fastcall InitRocket()
 {
 	using namespace ROCKET;
 
-	// Init rocket device
 	rocket = sync_create_device("s");
 
 	if (!rocket)
@@ -46,9 +45,7 @@ void __fastcall InitRocket()
 	for (int i = 0; i < NUM_TRACKS; i++)
 		tracks[i] = sync_get_track(rocket, trackNames[i]);
 
-	// Init callback
-	ROCKET::cb =
-	{
+	ROCKET::cb = {
 		PauseRocket,
 		SetRocketTime,
 		IsRocketRunning,
@@ -111,7 +108,7 @@ float __fastcall GetSyncValue(unsigned char index)
 
 namespace SYNC_DATA
 {
-	float vals[NUM_TRACKS] = { 0.0 };
+	float data[NUM_TRACKS][NUM_ROWS] = { 0.0 };
 }
 
 
@@ -119,30 +116,68 @@ namespace SYNC_DATA
 
 
 #include "def.hh"
+#include "auto_sync_data.h"
 
 
 using namespace SYNC_DATA;
 
-// Pull data out of compressed sync file
-__forceinline void __fastcall PrecalcSyncData()
-{
-	/*for (int i = 0; i < NUM_EVENTS; i++)
-	{
-		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
-		//todo
-	}*/
-}
 
-float __fastcall GetSyncValue(int index)
+// Precalculate single interpolation //
+__forceinline void __fastcall inter_sync(uint16_t index)
 {
-	// todo
-	for (int i; i < NUM_EVENTS; i++)
+	int i = index;
+	int inter = sync_data[index].inter;
+	// If no value found, keep current one
+	float next_val = sync_data[index].value;
+
+	while (i < NUM_EVENTS)
 	{
-		if (sync_data[i].track == index && sync_data[i].time == DEMO::row)
-			vals[index] = sync_data[i].value;
+		if (sync_data[i].value != 0 && sync_data[i].track == sync_data[index].track) {
+			next_val = sync_data[i].value;
+		}
+
+		i++;
 	}
 
-	return vals[index];
+	i = index + 1;
+
+	do {
+		if (sync_data[i].track == sync_data[index].track)
+		{
+			if (inter == INTER_LINEAR) {
+				float t = (DEMO::row - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
+				data[sync_data[i].track][i] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
+			}
+			else if (inter == INTER_SMOOTH) {
+				float t = (DEMO::row - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
+				t = t * t * (3 - 2 * t);
+				data[sync_data[i].track][i] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
+			}
+			else if (inter == INTER_RAMP) {
+				float t = (DEMO::row - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
+				t = POW(t, 2.0);
+				data[sync_data[i].track][i] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
+			}
+		}
+
+		i++;
+	} while (i < NUM_EVENTS);
+}
+
+__forceinline void __fastcall PrecalcSyncData()
+{
+	for (int i = 0; i < NUM_EVENTS; i++) {
+		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
+		if (sync_data[i].inter != 0) {
+			inter_sync(i);
+		}
+	}
+}
+
+__forceinline float __fastcall GetSyncValue(uint16_t index)
+{
+	// todo: track index may result in a crash at the end
+	return data[DEMO::row][index];
 }
 
 #endif

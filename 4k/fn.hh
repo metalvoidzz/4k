@@ -12,7 +12,6 @@
 
 namespace DEMO
 {
-	// Exit gracefully (i.e. die) //
 #ifdef DEBUG_BUILD
 	void __fastcall Die(int8_t cause)
 	{
@@ -33,81 +32,24 @@ namespace DEMO
 /* Window functions */
 
 
-#ifdef DEBUG_BUILD
-
-// Window callback //
-LONG WINAPI MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static PAINTSTRUCT ps;
-	
-	if (uMsg == WM_KEYDOWN)
-	{
+	if (uMsg == WM_KEYDOWN) {
 		if (wParam == VK_ESCAPE)
 		{
-			Quit();
+			DEMO::Die();
 		}
-		// Recompile shaders
-		else if (wParam == VK_SPACE)
-		{
+#ifdef DEBUG_BUILD
+		else if (wParam == VK_SPACE) {
 			init_gl();
 		}
-		/*else if(wParam == 0x57 && RENDER::ctrlCam)
-		{
-			RENDER::cz += 0.1;
-		}
-		else if(wParam == 0x41 && RENDER::ctrlCam)
-		{
-			RENDER::cx += 0.1;
-		}
-		else if(wParam == 0x53 && RENDER::ctrlCam)
-		{
-			RENDER::cz -= 0.1;
-		}
-		else if(wParam == 0x44 && RENDER::ctrlCam)
-		{
-			RENDER::cx -= 0.1;
-		}
-		else if (wParam == VK_TAB)
-		{
-			RENDER::ctrlCam = !RENDER::ctrlCam;
-		}*/
+#endif
 	}
-	else if (uMsg == WM_CLOSE)
-	{
-		Quit();
-	}
-	else if (uMsg == WM_TIMER)
-	{
-		UpdateRocket();
-
-		render_gl();
-
-		BeginPaint(WINDOW::hWnd, &ps);
-		EndPaint(WINDOW::hWnd, &ps);
-
-		BASS_Update(0);
-		Sleep(10);
-	}
+	else if (uMsg == WM_QUIT)
+		DEMO::Die();
 
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
-
-#else
-
-
-LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	if (uMsg == WM_KEYDOWN && wParam == VK_ESCAPE)
-	{
-		DEMO::Die();
-	}
-
-	return 1;
-}
-
-
-#endif
-
 static const WNDCLASSA wnd = {
 	CS_OWNDC,
 	MainWProc,
@@ -121,10 +63,10 @@ static const WNDCLASSA wnd = {
 	" ",
 };
 
-static const PIXELFORMATDESCRIPTOR pfd = {
+static PIXELFORMATDESCRIPTOR pfd = {
 	sizeof(PIXELFORMATDESCRIPTOR),
 	1,
-	PFD_SUPPORT_OPENGL,
+	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
 	PFD_TYPE_RGBA,
 	32,
 	0,
@@ -151,25 +93,26 @@ static const PIXELFORMATDESCRIPTOR pfd = {
 };
 
 
-// Init demo //
 __forceinline void __fastcall Init()
 {
-	// Init Window
+#if defined(SYNC_PRECALC_DATA)
+	PrecalcSyncData();
+#endif
+
 	{
 		using namespace WINDOW;
 
 #ifdef DEBUG_BUILD
 
-		// Debug mode //
-
 		if (!RegisterClassA(&wnd))
 			DEMO::Die(ERR_INIT_WINAPI);
 
-		hWnd = CreateWindowA
+		hWnd = CreateWindowExA
 		(
+			WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
 			" ",
 			"",
-			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
+			WS_VISIBLE | WS_CAPTION | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU,
 			0,
 			0,
 			WIDTH,
@@ -182,8 +125,8 @@ __forceinline void __fastcall Init()
 
 		if (!hWnd)
 			DEMO::Die(ERR_OPEN_WIN);
+
 #else
-		// Release mode //
 		
 		RegisterClassA(&wnd);
 
@@ -203,10 +146,10 @@ __forceinline void __fastcall Init()
 		);
 #endif
 
-		// Hide cursor
+#ifndef DEBUG_BUILD
 		ShowCursor(0);
+#endif
 		
-		// Context
 		HDC hDC = GetDC(hWnd);
 
 		int pf_handle = ChoosePixelFormat(hDC, &pfd);
@@ -221,20 +164,18 @@ __forceinline void __fastcall Init()
 		SetPixelFormat(hDC, pf_handle, &pfd);
 #endif
 
-		wglMakeCurrent(hDC, wglCreateContext(hDC));
+		DescribePixelFormat(hDC, pf_handle, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+		ReleaseDC(hWnd, hDC);
 
-		// Show
+		hDC = GetDC(hWnd);
+		HGLRC hRC = wglCreateContext(hDC);
+		wglMakeCurrent(hDC, hRC);
+
 #ifndef DEBUG_BUILD
-		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 #endif
 	}
 
-#if defined(SYNC_PRECALC_DATA) && !defined(DEBUG_BUILD)
-	// Init sync data
-	PrecalcSyncData();
-#endif
-
-	// Init OpenGL
 	init_gl();
 }
 
@@ -242,7 +183,6 @@ __forceinline void __fastcall Init()
 /* Render functions */
 
 
-// Init gl render stuff //
 #ifdef DEBUG_BUILD
 void __fastcall init_gl()
 #else
@@ -251,28 +191,14 @@ __forceinline void __fastcall init_gl()
 {
 	using namespace RENDER;
 
-	init_wrangler();
-
-	// Create shaders
-	//unsigned short hVS = glCreateShader(GL_VERTEX_SHADER);
+	InitGLExt();
+	
 	unsigned short hPX = glCreateShader(GL_FRAGMENT_SHADER);
 
 #ifdef DEBUG_BUILD
-	//p_vshader = fopen(VERTEX_FILE, "r");
+
 	p_pshader = fopen(PIXEL_FILE, "r");
-	
-	//if (p_vshader == NULL || p_pshader == NULL)
-	//	DEMO::Die(ERR_UNDEFINED);
 
-	// Vertex shader
-	/*fseek(p_vshader, 0L, SEEK_END);
-	long fsize = ftell(p_vshader);
-	rewind(p_vshader);
-	vBuf = (char*)calloc(1, fsize + 1);
-	fread(vBuf, fsize, 1, p_vshader);
-	fclose(p_vshader);*/
-
-	// Pixel shader
 	fseek(p_pshader, 0L, SEEK_END);
 	long fsize = ftell(p_pshader);
 	rewind(p_pshader);
@@ -280,35 +206,29 @@ __forceinline void __fastcall init_gl()
 	fread(pBuf, fsize, 1, p_pshader);
 	fclose(p_pshader);
 
-	//size_t vLen = strlen(vBuf);
 	size_t pLen = strlen(pBuf);
 
-	//glShaderSource(hVS, 1, &vBuf, (const GLint*)&vLen);
 	glShaderSource(hPX, 1, &pBuf, (const GLint*)&pLen);
+
 #else
 	
-	//glShaderSource(hVS, 1, &vshader_glsl, NULL);
 	glShaderSource(hPX, 1, &pshader_glsl, NULL);
 
 #endif
 
-	// Compile shaders
-	//glCompileShader(hVS);
 	glCompileShader(hPX);
 
 #ifdef DEBUG_BUILD
+
 	GLint success;
 
-	// Check if successful
 	glGetShaderiv(hPX, GL_COMPILE_STATUS, &success);
 
 	if (!success)
 	{
-		// Get gl output
 		GLint logSize = 0;
 		GLchar* str = (GLchar*)malloc(logSize + 1);
 
-		// Pixel shader
 		glGetShaderiv(hPX, GL_INFO_LOG_LENGTH, &logSize);
 		str = (GLchar*)malloc(logSize + 1);
 		glGetShaderInfoLog(hPX, logSize, &logSize, &str[0]);
@@ -317,47 +237,36 @@ __forceinline void __fastcall init_gl()
 	}
 
 #endif
-	// Link shaders
-	unsigned short hPr = glCreateProgram();
+
+	unsigned int hPr = glCreateProgram();
 
 	glAttachShader(hPr, hPX);
-
-	// Attributes
-	glBindAttribLocation(hPr, 0, "position");
-
 	glLinkProgram(hPr);
 
 #ifdef DEBUG_BUILD
-	// Check if linking was successful
-	//glGetShaderiv(hVS, GL_LINK_STATUS, &success[0]);
+
 	glGetShaderiv(hPX, GL_LINK_STATUS, &success);
-
-	//if (!success[0] || !success[1])
-	//	DEMO::Die(ERR_SHADER_LNK);
-
-	// Validate
 	glValidateProgram(hPr);
+
 #endif
 
-	// Bind
 	glUseProgram(hPr);
 
-	// Set aspect
-	glViewport(0, 0, WIDTH, HEIGHT);
-
-	ADD_UNIFORMS
+	uLoc = glGetUniformLocation(hPr, "un");
 }
 
-// Render a frame //
 #ifdef DEBUG_BUILD
 void __fastcall render_gl()
 #else
 __forceinline void __fastcall render_gl()
 #endif
 {
-	EVAL_UNIFORMS
+	using namespace RENDER;
 
-	// Render fullscreen quad
+	EVAL_UNIFORMS;
+
+	glUniform1fv(uLoc, NUM_UNIF, uniforms);
+
 	glBegin(GL_QUADS);
 
 	glVertex2i(-1, 1);

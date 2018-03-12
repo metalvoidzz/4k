@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -101,7 +101,8 @@
       <Command>C:\Python27\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
 ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj
 ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj</Command>
-      <Message>Compiling music data</Message>
+      <Message>
+      </Message>
     </PreLinkEvent>
     <PreBuildEvent>
       <Command>
@@ -138,6 +139,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalOptions>/QIfist %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -157,14 +159,16 @@
       <SectionAlignment>0</SectionAlignment>
     </Link>
     <PostBuildEvent>
-      <Command>cd .. &amp;&amp; crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj data_here\lib.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:intro.exe /TINYHEADER /TINYIMPORT /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE</Command>
+      <Command>cd .. &amp;&amp; crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj data_here\lib.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:intro.exe /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE /COMPMODE:SLOW /UNSAFEIMPORT /HASHSIZE:150 /HASHTRIES:100 /ORDERTRIES:8 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Linking final intro, get hyped!</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>python ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm &amp;&amp; ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj &amp;&amp; ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj &amp;&amp; ..\nasmw -f win32 lib.asm -o ..\data_here\lib.obj</Command>
-      <Message>Compiling music</Message>
+      <Message>
+      </Message>
     </PreLinkEvent>
     <PreBuildEvent>
       <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>

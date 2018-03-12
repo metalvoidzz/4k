@@ -75,6 +75,12 @@ std::string GenerateHeader()
 	str += "#define NUM_TRACKS " + std::to_string(NUM_TRACKS) + "\n";
 	str += "#define NUM_ROWS " + std::to_string(NUM_ROWS) + "\n";
 	str += "#define NUM_EVENTS " + std::to_string(NUM_EVENTS) + "\n";
+
+	str += "\n";
+
+	str += "#define INTER_LINEAR " + std::to_string(1) + "\n";
+	str += "#define INTER_SMOOTH " + std::to_string(2) + "\n";
+	str += "#define INTER_RAMP " + std::to_string(3) + "\n";
 	
 	/*str += "\n";
 	for (int i = 0; i < DATA::tracks.size(); i++)
@@ -86,13 +92,13 @@ std::string GenerateHeader()
 	str += "\n";*/
 
 	// Key definition
-	str += "\ntypedef struct SyncKey\n";
+	str += "\ntypedef struct\n";
 	str += "{\n";
-	str += "	unsigned int time;\n";
+	str += "	unsigned short time;\n";
 	str += "	float value;\n";
 	str += "	unsigned char inter;\n";
 	str += "	unsigned char track;\n";
-	str += "};\n\n\n";
+	str += "}SyncKey;\n\n\n";
 	// Namespace start
 	str += "namespace SYNC_DATA\n{\n";
 	// Resource
@@ -100,10 +106,8 @@ std::string GenerateHeader()
 	str += "	SyncKey sync_data[NUM_EVENTS] = {\n";
 	
 	int tr = 0;
-	for (const auto& t: DATA::tracks)
-	{
-		for (const auto& k: t.keys)
-		{
+	for (const auto& t: DATA::tracks) {
+		for (const auto& k: t.keys) {
 			std::ostringstream ss;
 			ss << k.value;
 			std::string s(ss.str());
@@ -127,10 +131,8 @@ std::string GenerateData()
 
 	std::string dat;
 
-	for (const auto& t: tracks)
-	{
-		for (const auto& k : t.keys)
-		{
+	for (const auto& t: tracks) {
+		for (const auto& k : t.keys) {
 			// Offset (2 bytes)
 			dat.append((const char*)&k.time, 2);
 			// Value (4 bytes)
@@ -172,11 +174,9 @@ int main(int argc, char** argv)
 	int beatsPerMin = pTracks->IntAttribute("beatsPerMin");
 
 	// Get tracks
-	for (tinyxml2::XMLElement* track = pTracks->FirstChildElement(); track != NULL; track = track->NextSiblingElement())
-	{
+	for (tinyxml2::XMLElement* track = pTracks->FirstChildElement(); track != NULL; track = track->NextSiblingElement()) {
 		std::string val = track->Value();
-		if (val == "track")
-		{
+		if (val == "track") {
 			Track t;
 
 			bool folded = track->IntAttribute("folded");
@@ -184,8 +184,7 @@ int main(int argc, char** argv)
 			t.name = track->Attribute("name");
 
 			// Get keys
-			for (tinyxml2::XMLElement* key = track->FirstChildElement(); key != NULL; key = key->NextSiblingElement())
-			{
+			for (tinyxml2::XMLElement* key = track->FirstChildElement(); key != NULL; key = key->NextSiblingElement()) {
 				Key k;
 
 				k.time = key->IntAttribute("row");

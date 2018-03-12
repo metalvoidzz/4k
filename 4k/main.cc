@@ -1,8 +1,3 @@
-/* COPYRIGHT (C) 2018 Julian Offenhäuser
- *
- * Sources of my first demoscene production
- */
-
 #ifndef DEBUG_BUILD
 
 extern "C"
@@ -29,22 +24,60 @@ extern "C"
 			ret
 		}
 	}
+
+#define EXP_A 184
+#define EXP_C 16249 
+
+	float EXP(float y)
+	{
+		union
+		{
+			float d;
+			struct
+			{
+#ifdef LITTLE_ENDIAN
+				short j, i;
+#else
+				short i, j;
+#endif
+			} n;
+		} eco;
+		eco.n.i = EXP_A*(y)+(EXP_C);
+		eco.n.j = 0;
+		return eco.d;
+	}
+
+	float LOG(float y)
+	{
+		int * nTemp = (int*)&y;
+		y = (*nTemp) >> 16;
+		return (y - EXP_C) / EXP_A;
+	}
+
+	float POW(float b, float p)
+	{
+		return EXP(LOG(b) * p);
+	}
 }
 
 #endif
 
 
 #ifndef DEBUG_BUILD
+
 #include "auto_sync_data.h"
+#define SYNC_PRECALC_DATA
+
 #endif
 
 
 #include "clinkster.h"
-//#define SYNC_PRECALC_DATA
 #include "fn.hh"
 
 
 #ifdef DEBUG_BUILD
+
+#include <stdio.h>
 
 void __fastcall Quit()
 {
@@ -53,14 +86,11 @@ void __fastcall Quit()
 
 void main()
 {
-	// Init clinkster
 	Clinkster_GenerateMusic();
 
-	//Init bass
 	if (!BASS_Init(-1, 44100, 0, 0, 0))
 		DEMO::Die(ERR_INIT_BASS);
 
-	// Write music to hd
 	FILE* outfile = fopen(EXPORT_TRACK_NAME, "wb");
 	fwrite(Clinkster_WavFileHeader, 1, sizeof(Clinkster_WavFileHeader), outfile);
 	fwrite(Clinkster_MusicBuffer, 1, Clinkster_WavFileHeader[10], outfile);
@@ -74,12 +104,41 @@ void main()
 	Init();
 	Play();
 
-	SetTimer(WINDOW::hWnd, 0, 10, NULL);
-	MSG message;
-	while (GetMessageA(&message, WINDOW::hWnd, 0, 0))
+	LARGE_INTEGER tps;
+	QueryPerformanceFrequency(&tps);
+	LARGE_INTEGER fps_to;
+	QueryPerformanceCounter(&fps_to);
+	int numframes = 0;
+
+	MSG msg;
+	while (1)
 	{
-		TranslateMessage(&message);
-		DispatchMessageA(&message);
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else {
+			UpdateRocket();
+
+			render_gl();
+
+			LARGE_INTEGER time;
+			QueryPerformanceCounter(&time);
+			numframes++;
+
+			const float dtime = (time.QuadPart - fps_to.QuadPart) / (float)tps.QuadPart;
+			if (dtime > 0.2f)
+			{
+				fps_to.QuadPart = time.QuadPart;
+				char buf[64];
+				printf("%4.1f fps\n", numframes / dtime);
+				numframes = 0;
+			}
+
+			BASS_Update(0);
+			Sleep(30);
+		}
 	}
 }
 
@@ -93,20 +152,26 @@ void __stdcall WinMainCRTStartup()
 	Clinkster_GenerateMusic();
 	Clinkster_StartMusic();
 
-	MSG message;
-	while (GetMessageA(&message, WINDOW::hWnd, 0, 0))
+	MSG msg;
+	while (1)
 	{
-		TranslateMessage(&message);
-		DispatchMessageA(&message);
-		
-		DEMO::time = Clinkster_GetPosition() / Clinkster_TicksPerSecond;
-		DEMO::row = DEMO::time / 0.01;
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else {
+			float p = Clinkster_GetPosition();
 
-		if (Clinkster_GetPosition() > Clinkster_MusicLength) break;
-		
-		render_gl();
+			if (p > Clinkster_MusicLength) break;
 
-		Sleep(10);
+			DEMO::time = p / Clinkster_TicksPerSecond;
+			DEMO::row = DEMO::time * row_rate;
+
+			render_gl();
+
+			Sleep(10);
+		}
 	}
 
 	DEMO::Die();

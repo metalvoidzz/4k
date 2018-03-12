@@ -1,31 +1,25 @@
 #version 120
 
 
-// Uniforms
-uniform float u_time;
-uniform float u_alpha;
-uniform float u_scene;
-// Camera position
-uniform float u_x;
-uniform float u_y;
-uniform float u_z;
-// Light position
-uniform float u_lx;
-uniform float u_ly;
-uniform float u_lz;
+uniform float un[6];
+
+
+float u_time = un[0];
+float u_alpha = un[1];
+float u_x = un[2];
+float u_y = un[3];
+float u_z = un[4];
+float u_scene = un[5];
 
 
 #define WIDTH 1366
 #define HEIGHT 768
 
 #define PI 3.141592
-#define MAX_ITER 255
+#define MAX_ITER 400
 #define MAX_DIST 200.0
-#define AMBIENT_LIGHT 0.5
 #define EPSILON 0.0001
 #define OMEGA 1.2
-#define WH vec2(WIDTH, HEIGHT)
-
 
 
 
@@ -109,38 +103,68 @@ float Combine(float d1, float d2, float r)
 		return m;
 	}
 }
-
-
-#define Repeat(p, c) mod(p, c)-0.5*c
 	
 // rotate space
 void sR(inout vec2 p, float a)
 {
 	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
 }
-	
+
+float sdPlane( vec3 p, vec4 n )
+{
+  // n must be normalized
+  return dot(p,n.xyz) + n.w;
+}
+
+float cylinderSDF(vec3 p, float r, float height)
+{
+	float d = length(p.xz) - r;
+	d = max(d, abs(p.y) - height);
+	return d;
+}
+
+float combine(float a, float b, float r)
+{
+	vec2 u = max(vec2(r - a,r - b), vec2(0));
+	return max(r, min (a, b)) - length(u);
+}
+
+float pMod1(inout float p, float size)
+{
+	float halfsize = size*0.5;
+	float c = floor((p + halfsize)/size);
+	p = mod(p + halfsize, size) - halfsize;
+	return c;
+}
 
 float sceneSDF(vec3 p)
 {
 	if(u_scene == 0)
 	{
-		// Wall 1 
-		//sR(p.xy, 0.7);
-		float w1 = cubeSDF(p, vec3(0.01,1.6,8));
+		float scene;
 		
-		p.x += 3;
-		
-		// Wall2
-		float w2 = cubeSDF(p, vec3(0.01,1.6,8));
+		sR(p.yz, 90);
+		float i = pMod1(p.x, 1);
 		
 		
-		float walls = min(w1, w2);
+		float box = cubeSDF(p, vec3(.15,1.6,0.6));
+		float wall = cubeSDF(p, vec3(0.03, 3.0, 1.1));
 		
-		p.x -= 1.5;
-		float box = cubeSDF(p, vec3(0.2,0.2,0.2));
+		p.y -= 1.6;
+		float c1 = cylinderSDF(p.yxz, 0.6, .15);
+		p.y += 3.2;
+		float c2 = cylinderSDF(p.yxz, 0.6, .15);
+
+		
+		float cylinders = min(c1, c2);
 		
 		
-		float scene = min(walls, box);
+		float mountedPart = min(box, cylinders);
+		
+		
+		float w = combine(mountedPart, wall, 0.04);
+		
+		scene = w;
 		
 		return scene;
 	}else if(u_scene == 1) {
@@ -150,10 +174,10 @@ float sceneSDF(vec3 p)
 
 float raymarch(vec3 eye, vec3 dir)
 {
-	float t=0.0;
-	float d=1.0;
-	float pd=10.0;
-	float os=0.0;
+	float t = 0.0;
+	float d = 1.0;
+	float pd = 10.0;
+	float os = 0.0;
 	
 	for(int i = 0; i < MAX_ITER; i++)
 	{
@@ -217,10 +241,10 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
 
 vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye)
 {
-    const vec3 ambientLight = AMBIENT_LIGHT * vec3(1.0, 1.0, 1.0);
+    const vec3 ambientLight = 0.5 * vec3(1.0, 1.0, 1.0);
     vec3 color = ambientLight * k_a;
     
-    vec3 lightPos = vec3(u_lx, u_ly, u_lz);
+    vec3 lightPos = vec3(4, 2, 1);
     vec3 lightIntensity = vec3(0.4, 0.4, 0.4);
     
     color += phongContribForLight(k_d, k_s, alpha, p, eye, lightPos, lightIntensity);
@@ -243,24 +267,24 @@ mat4 viewMatrix(vec3 eye, vec3 center, vec3 up)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / WH;
+	vec2 uv = gl_FragCoord.xy / vec2(WIDTH, HEIGHT);
     uv = uv * 2.0 - 1.0;
     uv.x *= WIDTH / HEIGHT;
 	
-	vec3 viewDir = rayDirection(45.0, WH,gl_FragCoord.xy);
+	vec3 dir = normalize(vec3(uv.xy,-2.0));
+	dir.z += length(uv) * 0.15;
+	
+	vec3 viewDir = rayDirection(45.0, vec2(WIDTH, HEIGHT), gl_FragCoord.xy);
     
 	vec3 eye = vec3(u_x, u_y, u_z);
     mat4 viewToWorld = viewMatrix(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
     vec3 worldDir = (viewToWorld * vec4(viewDir, 0.0)).xyz;
 	
     float dist = raymarch(eye, worldDir);
-    
-	vec3 dir = normalize(vec3(uv.xy,-2.0));
-	dir.z += length(uv) * 0.15;
 	
     if (dist > MAX_DIST - EPSILON)
 	{
-        gl_FragColor = vec4(SkyColor(dir) - u_alpha, 0.0);
+        gl_FragColor = vec4(SkyColor(dir), 0.0);
 		return;
     }
 
@@ -269,21 +293,12 @@ void main()
     vec3 K_a = vec3(0.2, 0.2, 0.2);
     vec3 K_d = vec3(0.7, 0.2, 0.2);
     vec3 K_s = vec3(1.0, 1.0, 1.0);
-    float shininess = 10.0;
-    
+    float shininess = 5.0;
+	
 	vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
 	
-    gl_FragColor = vec4(color - u_time, 1.0);	
+    gl_FragColor = vec4(color, 1.0);	
 }
-
-
-
-
-
-
-
-
-
 
 
 
