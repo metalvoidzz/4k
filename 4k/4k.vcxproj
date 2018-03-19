@@ -145,9 +145,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>opengl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -171,7 +171,7 @@
       </Message>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
+      <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-all-globals --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -194,6 +194,7 @@
     <ClInclude Include="asmlib.hh" />
     <ClInclude Include="def.hh" />
     <ClInclude Include="fn.hh" />
+    <ClInclude Include="impl.hh" />
     <ClInclude Include="sync.hh" />
     <ClInclude Include="visu.hh" />
   </ItemGroup>

@@ -63,8 +63,7 @@ typedef char GLchar;
 	GLE(GLint, GetUniformLocation, GLuint program, const GLchar *name) \
 	GLE(void, LinkProgram, GLuint program) \
 	GLE(void, ShaderSource, GLuint shader, GLsizei count, const GLchar* const *string, const GLint *length) \
-	GLE(void, Uniform1f, GLint location, GLfloat v0) \
-	GLE(void, Uniform1i, GLint location, GLint v0); \
+	GLE(void, Uniform1fv, GLint location, GLsizei count, const GLfloat* value); \
 	GLE(void, UseProgram, GLuint program) \
 	GLE(void, ValidateProgram, GLuint program)
 #else
@@ -78,7 +77,10 @@ typedef char GLchar;
 	GLE(void, LinkProgram, GLuint program) \
 	GLE(void, ShaderSource, GLuint shader, GLsizei count, const GLchar* const *string, const GLint *length) \
 	GLE(void, Uniform1fv, GLint location, GLsizei count, const GLfloat* value); \
-	GLE(void, UseProgram, GLuint program)
+	GLE(void, UseProgram, GLuint program) \
+	GLE(void, GetShaderInfoLog, GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog) \
+	GLE(void, GetShaderiv, GLuint shader, GLenum pname, GLint *params) \
+
 #endif
 
 #define GLE(ret, name, ...) typedef ret WINAPI name##proc(__VA_ARGS__); extern name##proc * gl##name; name##proc * gl##name;

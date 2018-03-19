@@ -98,7 +98,7 @@ void __fastcall UpdateRocket()
 	time = row * 0.01;
 }
 
-float __fastcall GetSyncValue(unsigned char index)
+__forceinline float __fastcall GetSyncValue(unsigned char index)
 {
 	return sync_get_val(ROCKET::tracks[index], DEMO::row);
 }
@@ -108,7 +108,7 @@ float __fastcall GetSyncValue(unsigned char index)
 
 namespace SYNC_DATA
 {
-	float data[NUM_TRACKS][NUM_ROWS] = { 0.0 };
+	float data[NUM_TRACKS][NUM_ROWS];
 }
 
 
@@ -118,6 +118,8 @@ namespace SYNC_DATA
 #include "def.hh"
 #include "auto_sync_data.h"
 
+#include <cmath>
+
 
 using namespace SYNC_DATA;
 
@@ -125,59 +127,82 @@ using namespace SYNC_DATA;
 // Precalculate single interpolation //
 __forceinline void __fastcall inter_sync(uint16_t index)
 {
-	int i = index;
+	//printf("--- Interpolating at index %i ---\n", index);
+
+	int i = index + 1;
 	int inter = sync_data[index].inter;
 	// If no value found, keep current one
 	float next_val = sync_data[index].value;
 
+	// Get next value
 	while (i < NUM_EVENTS)
 	{
-		if (sync_data[i].value != 0 && sync_data[i].track == sync_data[index].track) {
+		if (sync_data[i].time > sync_data[index].time && sync_data[i].value != 0 && sync_data[i].track == sync_data[index].track) {
 			next_val = sync_data[i].value;
+			break;
 		}
-
 		i++;
 	}
 
-	i = index + 1;
+	//printf("Current value: Track(%i), Value(%f), Row(%i)\n", sync_data[index].track, sync_data[index].value, sync_data[index].time);
+	//printf("Next value: Track(%i), Value(%f), Row(%i)\n", sync_data[i].track, next_val, sync_data[i].time);
 
-	do {
-		if (sync_data[i].track == sync_data[index].track)
-		{
-			if (inter == INTER_LINEAR) {
-				float t = (DEMO::row - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
-				data[sync_data[i].track][i] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
-			}
-			else if (inter == INTER_SMOOTH) {
-				float t = (DEMO::row - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
-				t = t * t * (3 - 2 * t);
-				data[sync_data[i].track][i] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
-			}
-			else if (inter == INTER_RAMP) {
-				float t = (DEMO::row - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
-				t = POW(t, 2.0);
-				data[sync_data[i].track][i] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
-			}
+	// Start at current row, but don't override its value
+	float it = sync_data[index].time + 1;
+
+	//printf("Interpolating from row %i to row %i, start value is %f, end value is %f\n", it, sync_data[i].time, sync_data[index].value, sync_data[i].value);
+
+	// Interpolate until row of next value reached or end was hit
+	while (it < sync_data[i].time && it < NUM_ROWS)
+	{
+		if (inter == INTER_LINEAR) {
+			float t = (it - sync_data[index].time) / (sync_data[i].time  - sync_data[index].time);
+			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
+		}
+		else if (inter == INTER_SMOOTH) {
+			float t = (it - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
+			t = t * t * (3 - 2 * t);
+			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
+		}
+		else if (inter == INTER_RAMP) {
+			float t = (it - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
+			t = pow(t, 2.0);
+			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
+		}
+		else {
+			// No interpolation, keep value until next one
+			data[sync_data[index].track][(int)it] = sync_data[index].value;
 		}
 
-		i++;
-	} while (i < NUM_EVENTS);
+		//printf(" - Interpolation step at row %i: %f\n", (int)it, data[sync_data[index].track][(int)it]);
+
+		it++;
+	}
 }
 
 __forceinline void __fastcall PrecalcSyncData()
 {
-	for (int i = 0; i < NUM_EVENTS; i++) {
+	for (int i = 0; i < NUM_EVENTS; i++)
+	{
 		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
-		if (sync_data[i].inter != 0) {
-			inter_sync(i);
-		}
+		inter_sync(i);
 	}
+
+	/*for (int r = 0; r < NUM_ROWS; r++)
+	{
+		for (int t = 0; t < NUM_TRACKS; t++)
+		{
+			printf("%f  ", data[t][r]);
+		}
+		printf("\n");
+	}*/
 }
 
 __forceinline float __fastcall GetSyncValue(uint16_t index)
 {
-	// todo: track index may result in a crash at the end
-	return data[DEMO::row][index];
+	if (DEMO::row >= NUM_ROWS)
+		return data[index][NUM_ROWS - 1];
+	return data[index][DEMO::row];
 }
 
 #endif

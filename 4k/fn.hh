@@ -112,7 +112,7 @@ __forceinline void __fastcall Init()
 			WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
 			" ",
 			"",
-			WS_VISIBLE | WS_CAPTION | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU,
+			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
 			0,
 			0,
 			WIDTH,
@@ -144,6 +144,7 @@ __forceinline void __fastcall Init()
 			NULL,
 			NULL
 		);
+
 #endif
 
 #ifndef DEBUG_BUILD
@@ -171,9 +172,7 @@ __forceinline void __fastcall Init()
 		HGLRC hRC = wglCreateContext(hDC);
 		wglMakeCurrent(hDC, hRC);
 
-#ifndef DEBUG_BUILD
-		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
-#endif
+		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 	}
 
 	init_gl();
@@ -212,11 +211,14 @@ __forceinline void __fastcall init_gl()
 
 #else
 	
-	glShaderSource(hPX, 1, &pshader_glsl, NULL);
+	size_t pLen = strlen(pshader_glsl);
+
+	glShaderSource(hPX, 1, &pshader_glsl, (const GLint*)&pLen);
 
 #endif
 
 	glCompileShader(hPX);
+
 
 #ifdef DEBUG_BUILD
 

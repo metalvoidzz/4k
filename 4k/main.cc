@@ -1,72 +1,9 @@
 #ifndef DEBUG_BUILD
 
-extern "C"
-{
-	void* _fltused = 0;
-	void* _chkstk = 0;
-
-	void m_memcpy(void *dest, void *src, size_t n)
-	{
-		char *csrc = (char *)src;
-		char *cdest = (char *)dest;
-
-		for (int i = 0; i<n; i++)
-			cdest[i] = csrc[i];
-	}
-
-	void _ftol2()
-	{
-		__asm
-		{
-			fistp qword ptr[esp - 8]
-			mov edx, [esp - 4]
-			mov eax, [esp - 8]
-			ret
-		}
-	}
-
-#define EXP_A 184
-#define EXP_C 16249 
-
-	float EXP(float y)
-	{
-		union
-		{
-			float d;
-			struct
-			{
-#ifdef LITTLE_ENDIAN
-				short j, i;
-#else
-				short i, j;
-#endif
-			} n;
-		} eco;
-		eco.n.i = EXP_A*(y)+(EXP_C);
-		eco.n.j = 0;
-		return eco.d;
-	}
-
-	float LOG(float y)
-	{
-		int * nTemp = (int*)&y;
-		y = (*nTemp) >> 16;
-		return (y - EXP_C) / EXP_A;
-	}
-
-	float POW(float b, float p)
-	{
-		return EXP(LOG(b) * p);
-	}
-}
-
-#endif
-
-
-#ifndef DEBUG_BUILD
-
 #include "auto_sync_data.h"
 #define SYNC_PRECALC_DATA
+
+#include "impl.hh"
 
 #endif
 
@@ -137,7 +74,7 @@ void main()
 			}
 
 			BASS_Update(0);
-			Sleep(30);
+			Sleep(10);
 		}
 	}
 }
@@ -145,6 +82,10 @@ void main()
 #else
 
 #include "asmlib.hh"
+
+#include <cstdio>
+
+#pragma comment(lib, "msvcrt")
 
 void __stdcall WinMainCRTStartup()
 {
@@ -165,8 +106,10 @@ void __stdcall WinMainCRTStartup()
 
 			if (p > Clinkster_MusicLength) break;
 
-			DEMO::time = p / Clinkster_TicksPerSecond;
-			DEMO::row = DEMO::time * row_rate;
+			DEMO::row = (int)((p / (float)Clinkster_TicksPerSecond) * row_rate);
+			DEMO::time = DEMO::row * 0.01;
+
+			//printf("Row: %i    Time: %f    Seconds: %f\n", DEMO::row, DEMO::time, (float)(p / (float)Clinkster_TicksPerSecond));
 
 			render_gl();
 
@@ -175,6 +118,17 @@ void __stdcall WinMainCRTStartup()
 	}
 
 	DEMO::Die();
+}
+
+int CALLBACK WinMain(
+	HINSTANCE   hInstance,
+	HINSTANCE   hPrevInstance,
+	LPSTR       lpCmdLine,
+	int         nCmdShow
+)
+{
+	WinMainCRTStartup();
+	return 0;
 }
 
 #endif

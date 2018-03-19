@@ -22,7 +22,7 @@ using namespace tinyxml2;
 typedef struct Key
 {
 	float value;
-	unsigned short time;
+	unsigned int time;
 	unsigned char inter;
 	unsigned char track;
 };
@@ -94,7 +94,7 @@ std::string GenerateHeader()
 	// Key definition
 	str += "\ntypedef struct\n";
 	str += "{\n";
-	str += "	unsigned short time;\n";
+	str += "	unsigned int time;\n";
 	str += "	float value;\n";
 	str += "	unsigned char inter;\n";
 	str += "	unsigned char track;\n";
@@ -214,9 +214,13 @@ int main(int argc, char** argv)
 	HEADER::NUM_ROWS = []() -> int {
 		int c = 0;
 		for (const auto& t : tracks)
-			for (const auto& r : t.keys)
-				if (r.time > 0)
-					c = r.time;
+		{
+			for (const auto& k : t.keys)
+			{
+				if (k.time > c)
+					c = k.time;
+			}
+		}
 		return c;
 	}() + 1;
 	// Embedded resource

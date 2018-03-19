@@ -46,8 +46,8 @@ static const char* error_msg[] = {
 /* Demo defines */
 
 
-#define WIDTH	1366
-#define HEIGHT	768
+#define WIDTH	1920
+#define HEIGHT	1080
 
 
 namespace DEMO
@@ -126,6 +126,7 @@ namespace BASS
 	uniforms[UNIF_CAMY] = GetSyncValue(TRACK_CAMY); \
 	uniforms[UNIF_CAMZ] = GetSyncValue(TRACK_CAMZ); \
  
+
 /* Window defines */
 
 

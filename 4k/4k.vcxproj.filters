@@ -24,6 +24,9 @@
     <ClInclude Include="asmlib.hh">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="impl.hh">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cc">
