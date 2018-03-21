@@ -102,17 +102,16 @@ __forceinline void __fastcall Init()
 	{
 		using namespace WINDOW;
 
-#ifdef DEBUG_BUILD
+		RegisterClassA(&wnd);
 
-		if (!RegisterClassA(&wnd))
-			DEMO::Die(ERR_INIT_WINAPI);
+		DWORD dwStyle = WS_VISIBLE | WS_CAPTION | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MINIMIZEBOX | WS_SYSMENU;
 
-		hWnd = CreateWindowExA
+		hWnd = CreateWindowEx
 		(
 			WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
 			" ",
 			"",
-			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
+			dwStyle,
 			0,
 			0,
 			WIDTH,
@@ -122,30 +121,6 @@ __forceinline void __fastcall Init()
 			wnd.hInstance,
 			NULL
 		);
-
-		if (!hWnd)
-			DEMO::Die(ERR_OPEN_WIN);
-
-#else
-		
-		RegisterClassA(&wnd);
-
-		hWnd = CreateWindowA
-		(
-			" ",
-			"",
-			WS_POPUP | WS_VISIBLE | WS_SYSMENU,
-			0,
-			0,
-			WIDTH,
-			HEIGHT,
-			NULL,
-			NULL,
-			NULL,
-			NULL
-		);
-
-#endif
 
 #ifndef DEBUG_BUILD
 		ShowCursor(0);
@@ -172,7 +147,10 @@ __forceinline void __fastcall Init()
 		HGLRC hRC = wglCreateContext(hDC);
 		wglMakeCurrent(hDC, hRC);
 
-		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		LONG exStyle = GetWindowLong(WINDOW::hWnd, GWL_EXSTYLE);
+		LONG style = GetWindowLong(WINDOW::hWnd, GWL_STYLE);
+
+		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 	}
 
 	init_gl();

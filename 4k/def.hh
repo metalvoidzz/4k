@@ -46,8 +46,8 @@ static const char* error_msg[] = {
 /* Demo defines */
 
 
-#define WIDTH	1920
-#define HEIGHT	1080
+#define WIDTH	1366
+#define HEIGHT	768
 
 
 namespace DEMO
@@ -59,8 +59,8 @@ namespace DEMO
 	__forceinline void __fastcall Die();
 #endif
 
-	float time = 0.0;
-	unsigned int row = 0;
+	float time;
+	unsigned int row;
 };
 
 

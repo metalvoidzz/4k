@@ -191,6 +191,12 @@ int main(int argc, char** argv)
 				k.value = key->FloatAttribute("value");
 				k.inter = key->IntAttribute("interpolation");
 
+				/* If value == 0, it will be skipped, we don't
+				want that in this case
+				Todo: get rid of this ugly workaround */
+				if (k.value == 0)
+					k.value = 0.000001;
+
 				t.keys.push_back(k);
 			}
 

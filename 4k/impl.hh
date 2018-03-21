@@ -2,7 +2,9 @@
 
 #pragma once
 
+
 #include <cinttypes>
+
 
 extern "C"
 {
@@ -23,7 +25,7 @@ extern "C"
 		return cdest;
 	}
 
-	/*void _ftol2()
+	void _ftol2()
 	{
 		__asm
 		{
@@ -32,9 +34,9 @@ extern "C"
 			mov eax, [esp - 8]
 			ret
 		}
-	}*/
+	}
 
-	/*extern "C" void * __cdecl memset(void*, int, size_t);
+	extern "C" void * __cdecl memset(void*, int, size_t);
 #pragma intrinsic(memset)
 #pragma function(memset)
 	void* __cdecl memset(void* b, int c, size_t len)
@@ -49,7 +51,7 @@ extern "C"
 			len--;
 		}
 		return(b);
-	}*/
+	}
 
 	extern "C" size_t __cdecl strlen(const char*);
 #pragma intrinsic(strlen)

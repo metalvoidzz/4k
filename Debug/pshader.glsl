@@ -14,12 +14,12 @@ float u_z = un[4];
 float u_scene = un[5];
 
 
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 1366
+#define HEIGHT 768
 
-#define MAX_ITER 500
-#define MAX_DIST 100
-#define AMBIENCE 5
+#define MAX_ITER 1200
+#define MAX_DIST 400
+#define AMBIENCE 14
 
 #define PI 3.141592
 
@@ -71,12 +71,11 @@ float opSub( float d1, float d2 ) {
     return max(-d1,d2);
 }
 
-float pMod1(in float p, float size)
-{
+float pMod1(inout float p, float size) {
 	float halfsize = size*0.5;
 	float c = floor((p + halfsize)/size);
 	p = mod(p + halfsize, size) - halfsize;
-	return p;
+	return c;
 }
 
 void pR(inout vec2 p, float a) {
@@ -131,6 +130,9 @@ float cubeSDF(vec3 p, vec3 b)
 
 float sceneSDF(vec3 p)
 {
+	pMod1(p.x, 20);
+	pMod1(p.z, 20);
+	
 	float ground = cubeSDF(vec3(p.x, p.y+2.25, p.z), vec3(8,.25,9));
 
 	float w1 = cubeSDF(vec3(p.x+2, p.y, p.z+1), vec3(0.4, 2, 0.4));
@@ -144,7 +146,7 @@ float sceneSDF(vec3 p)
 	float a = min(a1, a2);
 	
 	// Wall cut-out
-	float wall = min(min(w1, w2), a);
+	float wall = min(w1, w2);
 	
 	float s = min(wall, ground);	
 	
@@ -291,9 +293,9 @@ void main()
 	}
 	
 	
-	vec3 color = vec3(0.3, 0.3, 0.3);
 	vec3 sp = eye + dist * worldDir;
 	vec3 sn = estimateNormal(sp);
+	vec3 color = vec3(0.2, 0.2, 0.2);
 	
 	
 	
@@ -358,7 +360,9 @@ void main()
 	li += sky*vec3(0.16,0.20,0.28)*ao;
 	li += ind*vec3(0.40,0.28,0.20)*ao;
 	
-	color = li * (((diff)*0.75 + AMBIENCE*0.25) + (spec)*color*2. + fre*crv*color.zyx*2.);
+	color = (li * (color*AMBIENCE)) + (spec*color*2);
+	color *= fre*atten;
+	
 	color = pow(color, vec3(1.0/2.2) );
 	
 	gl_FragColor = vec4(color - u_alpha, 1.0);

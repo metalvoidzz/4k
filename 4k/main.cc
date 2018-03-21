@@ -83,10 +83,6 @@ void main()
 
 #include "asmlib.hh"
 
-#include <cstdio>
-
-#pragma comment(lib, "msvcrt")
-
 void __stdcall WinMainCRTStartup()
 {
 	Init();
@@ -109,8 +105,6 @@ void __stdcall WinMainCRTStartup()
 			DEMO::row = (int)((p / (float)Clinkster_TicksPerSecond) * row_rate);
 			DEMO::time = DEMO::row * 0.01;
 
-			//printf("Row: %i    Time: %f    Seconds: %f\n", DEMO::row, DEMO::time, (float)(p / (float)Clinkster_TicksPerSecond));
-
 			render_gl();
 
 			Sleep(10);
@@ -118,17 +112,6 @@ void __stdcall WinMainCRTStartup()
 	}
 
 	DEMO::Die();
-}
-
-int CALLBACK WinMain(
-	HINSTANCE   hInstance,
-	HINSTANCE   hPrevInstance,
-	LPSTR       lpCmdLine,
-	int         nCmdShow
-)
-{
-	WinMainCRTStartup();
-	return 0;
 }
 
 #endif
