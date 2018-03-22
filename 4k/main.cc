@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #ifndef DEBUG_BUILD
 
 #include "auto_sync_data.h"
@@ -10,6 +12,7 @@
 
 #include "clinkster.h"
 #include "fn.hh"
+#include "def.hh"
 
 
 #ifdef DEBUG_BUILD
@@ -37,6 +40,11 @@ void main()
 	if (!BASS::stream)
 		DEMO::Die(ERR_INIT_BASS);
 
+
+	DEMO::hShader = CreateFile(PIXEL_FILE, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	GetFileTime(DEMO::hShader, NULL, NULL, &DEMO::ftime);
+
+
 	InitRocket();
 	Init();
 	Play();
@@ -48,6 +56,7 @@ void main()
 	int numframes = 0;
 
 	MSG msg;
+	SetTimer(WINDOW::hWnd, 0, 100, NULL);
 	while (1)
 	{
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -74,7 +83,7 @@ void main()
 			}
 
 			BASS_Update(0);
-			Sleep(10);
+			Sleep(40);
 		}
 	}
 }
@@ -82,6 +91,8 @@ void main()
 #else
 
 #include "asmlib.hh"
+
+#pragma comment(lib, "msvcrt")
 
 void __stdcall WinMainCRTStartup()
 {
@@ -105,6 +116,8 @@ void __stdcall WinMainCRTStartup()
 			DEMO::row = (int)((p / (float)Clinkster_TicksPerSecond) * row_rate);
 			DEMO::time = DEMO::row * 0.01;
 
+			printf("Position(%f), Row(%i), Time(%f)\n", p, DEMO::row, DEMO::time);
+
 			render_gl();
 
 			Sleep(10);
@@ -112,6 +125,13 @@ void __stdcall WinMainCRTStartup()
 	}
 
 	DEMO::Die();
+}
+
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+	WinMainCRTStartup();
+
+	return 0;
 }
 
 #endif

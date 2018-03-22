@@ -19,7 +19,7 @@ float u_scene = un[5];
 
 #define MAX_ITER 1200
 #define MAX_DIST 400
-#define AMBIENCE 14
+#define AMBIENCE 10
 
 #define PI 3.141592
 
@@ -130,8 +130,8 @@ float cubeSDF(vec3 p, vec3 b)
 
 float sceneSDF(vec3 p)
 {
-	pMod1(p.x, 20);
-	pMod1(p.z, 20);
+	pMod1(p.x, 20.0);
+	pMod1(p.z, 20.0);
 	
 	float ground = cubeSDF(vec3(p.x, p.y+2.25, p.z), vec3(8,.25,9));
 
@@ -229,7 +229,7 @@ float calculateAO(vec3 p, vec3 n){
     const float AO_SAMPLES = 5.0;
     float r = 0.0, w = 1.0, d;
     
-    for (float i=1.0; i<AO_SAMPLES+1.1; i++){
+    for (float i=1.0; i<AO_SAMPLES+1.1; i++) {
         d = i/AO_SAMPLES;
         r += w*(d - sceneSDF(p + n*d));
         w *= 0.5;
@@ -295,7 +295,7 @@ void main()
 	
 	vec3 sp = eye + dist * worldDir;
 	vec3 sn = estimateNormal(sp);
-	vec3 color = vec3(0.2, 0.2, 0.2);
+	vec3 color = vec3(sin(u_time), cos(sin(u_time)), cos(sin(u_time))*.5);
 	
 	
 	
@@ -350,17 +350,17 @@ void main()
 	float fre = pow( clamp(dot(sn, rd) + 1., .0, 1.), 1.);
 	
 	// Sun
-	vec3 sunDir;
+	vec3 sunDir = vec3(0.0, 0.0, 0.0);
 	
     float sun = clamp( dot( sn, sunDir ), 0.0, 1.0 );
     float ind = clamp( dot( sn, normalize(sunDir*vec3(-1.0,0.0,-1.0)) ), 0.0, 1.0 );
 	
 	// Final color
 	vec3 li = sun*vec3(1.64,1.27,0.99)*pow(vec3(shadow),vec3(1.0,1.2,1.5));
-	li += sky*vec3(0.16,0.20,0.28)*ao;
-	li += ind*vec3(0.40,0.28,0.20)*ao;
+	li += sky*vec3(0.16,0.20,0.28)*ao*(AMBIENCE*2);
+	li += ind*vec3(0.40,0.28,0.20)*ao*(AMBIENCE*2);
 	
-	color = (li * (color*AMBIENCE)) + (spec*color*2);
+	color = li * color + (spec*color*2);
 	color *= fre*atten;
 	
 	color = pow(color, vec3(1.0/2.2) );

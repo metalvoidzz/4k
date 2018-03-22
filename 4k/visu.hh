@@ -10,9 +10,6 @@
 
 #include <stdio.h>
 
-#define VERTEX_FILE "vshader.glsl"
-FILE* p_vshader;
-char* vBuf;
 #define PIXEL_FILE "pshader.glsl"
 FILE* p_pshader;
 char* pBuf;

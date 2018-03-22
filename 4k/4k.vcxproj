@@ -145,9 +145,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>opengl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -166,7 +166,7 @@
       </Message>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>python ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm &amp;&amp; ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj &amp;&amp; ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj &amp;&amp; ..\nasmw -f win32 lib.asm -o ..\data_here\lib.obj</Command>
+      <Command>C:\Python27\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm &amp;&amp; ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj &amp;&amp; ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj &amp;&amp; ..\nasmw -f win32 lib.asm -o ..\data_here\lib.obj</Command>
       <Message>
       </Message>
     </PreLinkEvent>

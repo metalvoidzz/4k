@@ -47,6 +47,25 @@ LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	else if (uMsg == WM_QUIT)
 		DEMO::Die();
+	else if (uMsg == WM_TIMER) {
+		// Check for updated shaders
+		FILETIME f;
+		GetFileTime(DEMO::hShader, NULL, NULL, &f);
+
+		SYSTEMTIME t_old;
+		SYSTEMTIME t_new;
+
+		FileTimeToSystemTime(&DEMO::ftime, &t_old);
+		FileTimeToSystemTime(&f, &t_new);
+		
+		if (t_old.wSecond != t_new.wSecond) {
+			init_gl();
+			DEMO::ftime = f;
+			printf("Reloading\n");
+		} else {
+			DEMO::ftime = f;
+		}
+	}
 
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
@@ -104,7 +123,7 @@ __forceinline void __fastcall Init()
 
 		RegisterClassA(&wnd);
 
-		DWORD dwStyle = WS_VISIBLE | WS_CAPTION | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MINIMIZEBOX | WS_SYSMENU;
+		DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MINIMIZEBOX | WS_SYSMENU;
 
 		hWnd = CreateWindowEx
 		(
@@ -147,10 +166,7 @@ __forceinline void __fastcall Init()
 		HGLRC hRC = wglCreateContext(hDC);
 		wglMakeCurrent(hDC, hRC);
 
-		LONG exStyle = GetWindowLong(WINDOW::hWnd, GWL_EXSTYLE);
-		LONG style = GetWindowLong(WINDOW::hWnd, GWL_STYLE);
-
-		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 	}
 
 	init_gl();

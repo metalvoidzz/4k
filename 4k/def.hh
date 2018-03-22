@@ -55,12 +55,14 @@ namespace DEMO
 	void __fastcall Loop();
 #ifdef DEBUG_BUILD
 	void __fastcall Die(int8_t cause = -1);
+	HANDLE hShader;
+	FILETIME ftime;
 #else
 	__forceinline void __fastcall Die();
 #endif
 
-	float time;
-	unsigned int row;
+	float time = 0.0;
+	unsigned int row = 0;
 };
 
 

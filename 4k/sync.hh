@@ -84,6 +84,7 @@ double bass_get_row(HSTREAM h)
 {
 	QWORD pos = BASS_ChannelGetPosition(h, BASS_POS_BYTE);
 	double time = BASS_ChannelBytes2Seconds(h, pos);
+	DEMO::time = time;
 	return time * row_rate;
 }
 
@@ -94,8 +95,6 @@ void __fastcall UpdateRocket()
 	row = bass_get_row(BASS::stream);
 	if (sync_update(ROCKET::rocket, (int)floor(row), &ROCKET::cb, (void *)&BASS::stream))
 		Die();
-
-	time = row * 0.01;
 }
 
 __forceinline float __fastcall GetSyncValue(unsigned char index)
@@ -188,14 +187,14 @@ __forceinline void __fastcall PrecalcSyncData()
 		inter_sync(i);
 	}
 
-	/*for (int r = 0; r < NUM_ROWS; r++)
+	for (int r = 0; r < NUM_ROWS; r++)
 	{
 		for (int t = 0; t < NUM_TRACKS; t++)
 		{
 			printf("%f  ", data[t][r]);
 		}
 		printf("\n");
-	}*/
+	}
 }
 
 __forceinline float __fastcall GetSyncValue(uint16_t index)
