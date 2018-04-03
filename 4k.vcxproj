@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{629F7841-4E08-4162-9513-A319D24C63DD}</ProjectGuid>
+    <ProjectGuid>{95390DA2-A65A-4A71-A977-0BF7A3A5048C}</ProjectGuid>
     <RootNamespace>My4k</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -51,7 +51,8 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -67,47 +68,32 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IgnoreImportLibrary>false</IgnoreImportLibrary>
-    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>bin\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_$(Configuration)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)bin</OutDir>
+    <IntDir>bin\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_$(Configuration)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>false</SDLCheck>
-      <ExceptionHandling>false</ExceptionHandling>
-      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>DEBUG_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <CompileAsManaged>true</CompileAsManaged>
-      <DebugInformationFormat>None</DebugInformationFormat>
-      <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalIncludeDirectories>thirdparty\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link />
-    <Link>
-      <AdditionalDependencies>opengl32.lib;winmm.lib;bass/c/bass.lib;librocket/lib/librocket.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <EntryPointSymbol>main</EntryPointSymbol>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
     <PreLinkEvent>
-      <Command>C:\Python27\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm
-..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj
-..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj</Command>
-      <Message>
-      </Message>
+      <Command>cd src &amp;&amp; C:\Python27\python.exe ..\bin\RenoiseConvert.py ..\data\music.xrns ..\data\music.asm &amp;&amp; ..\bin\nasmw -f win32 ..\data\music.asm -I..\data -o ..\data\music.obj &amp;&amp; ..\bin\nasmw -f win32 ..\thirdparty\clinkster\clinkster.asm -I ..\data\ -o ..\data\clinkster.obj</Command>
     </PreLinkEvent>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
+    <Link>
+      <AdditionalLibraryDirectories>thirdparty\bass\c;thirdparty\librocket\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bass.lib;librocket.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -120,59 +106,43 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MinSpace</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAsManaged>false</CompileAsManaged>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <OmitFramePointers>false</OmitFramePointers>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <OmitFramePointers>true</OmitFramePointers>
-      <StringPooling>false</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <ControlFlowGuard>false</ControlFlowGuard>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Strict</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <CreateHotpatchableImage>false</CreateHotpatchableImage>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalOptions>/QIfist %(AdditionalOptions)</AdditionalOptions>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <AdditionalOptions>/QIFist %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>thirdparty\;data\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <StringPooling>false</StringPooling>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>opengl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <HeapReserveSize>
-      </HeapReserveSize>
-      <RandomizedBaseAddress>true</RandomizedBaseAddress>
-      <SectionAlignment>0</SectionAlignment>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <SubSystem>Windows</SubSystem>
     </Link>
-    <PostBuildEvent>
-      <Command>cd .. &amp;&amp; crinkler.exe 4k\Release\main.obj music_here\music.obj music_here\clinkster.obj data_here\lib.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:intro.exe /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE /COMPMODE:SLOW /UNSAFEIMPORT /HASHSIZE:150 /HASHTRIES:100 /ORDERTRIES:8 /TINYHEADER /TINYIMPORT </Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-    </PostBuildEvent>
-    <PreLinkEvent>
-      <Command>C:\Python27\python.exe ..\RenoiseConvert.py ..\music_here\music.xrns ..\music_here\music.asm &amp;&amp; ..\nasmw -f win32 ..\music_here\music.asm -I..\music_here -o ..\music_here\music.obj &amp;&amp; ..\nasmw -f win32 clinkster.asm -I ..\music_here\ -o ..\music_here\clinkster.obj &amp;&amp; ..\nasmw -f win32 lib.asm -o ..\data_here\lib.obj</Command>
-      <Message>
-      </Message>
-    </PreLinkEvent>
     <PreBuildEvent>
-      <Command>cd ..\ &amp;&amp; shader_minifier.exe --preserve-all-globals --preserve-externals Debug\pshader.glsl -o 4k\auto_pshader.h &amp;&amp; Release\datagen.exe data_here\sync.rocket data_here\sync.bin 4k\auto_sync_data.h</Command>
+      <Command>bin\shader_minifier.exe --preserve-externals bin\pshader.glsl -o data\auto_pshader.h &amp;&amp; bin\datagen.exe data\sync.rocket data\sync.bin data\auto_sync_data.h</Command>
     </PreBuildEvent>
+    <PreLinkEvent>
+      <Command>cd src &amp;&amp; C:\Python27\python.exe ..\bin\RenoiseConvert.py ..\data\music.xrns ..\data\music.asm &amp;&amp; ..\bin\nasmw -f win32 ..\data\music.asm -I..\data -o ..\data\music.obj &amp;&amp; ..\bin\nasmw -f win32 ..\thirdparty\clinkster\clinkster.asm -I ..\data\ -o ..\data\clinkster.obj</Command>
+    </PreLinkEvent>
+    <PostBuildEvent>
+      <Command>bin\crinkler.exe bin\Release\main.obj data\music.obj data\clinkster.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:bin/intro.exe /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE /COMPMODE:SLOW /UNSAFEIMPORT /HASHSIZE:150 /HASHTRIES:500 /ORDERTRIES:1000 /TINYHEADER /TINYIMPORT </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -188,26 +158,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cc" />
+    <ClInclude Include="src\def.hh" />
+    <ClInclude Include="src\fn.hh" />
+    <ClInclude Include="src\impl.hh" />
+    <ClInclude Include="src\sync.hh" />
+    <ClInclude Include="src\visu.hh" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="asmlib.hh" />
-    <ClInclude Include="def.hh" />
-    <ClInclude Include="fn.hh" />
-    <ClInclude Include="impl.hh" />
-    <ClInclude Include="sync.hh" />
-    <ClInclude Include="visu.hh" />
+    <ClCompile Include="src\main.cc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="lib.asm">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="..\data_here\lib.obj" />
-    <Object Include="..\music_here\clinkster.obj" />
-    <Object Include="..\music_here\music.obj" />
+    <Object Include="data\clinkster.obj" />
+    <Object Include="data\music.obj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
 </Project>

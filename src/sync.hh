@@ -4,9 +4,9 @@
 #pragma once
 
 
-static const float bpm = 210.0f;
+static const float bpm = 104.0f;
 static const int rpb = 8;
-static const double row_rate = (double(bpm) / 60) * rpb;
+static const float row_rate = ((float)bpm / 60) * rpb;
 
 
 #ifdef DEBUG_BUILD
@@ -123,11 +123,11 @@ namespace SYNC_DATA
 using namespace SYNC_DATA;
 
 
+#ifndef NO_INTER
+
 // Precalculate single interpolation //
 __forceinline void __fastcall inter_sync(uint16_t index)
 {
-	//printf("--- Interpolating at index %i ---\n", index);
-
 	int i = index + 1;
 	int inter = sync_data[index].inter;
 	// If no value found, keep current one
@@ -142,58 +142,52 @@ __forceinline void __fastcall inter_sync(uint16_t index)
 		}
 		i++;
 	}
-
-	//printf("Current value: Track(%i), Value(%f), Row(%i)\n", sync_data[index].track, sync_data[index].value, sync_data[index].time);
-	//printf("Next value: Track(%i), Value(%f), Row(%i)\n", sync_data[i].track, next_val, sync_data[i].time);
-
+	
 	// Start at current row, but don't override its value
 	float it = sync_data[index].time + 1;
-
-	//printf("Interpolating from row %i to row %i, start value is %f, end value is %f\n", it, sync_data[i].time, sync_data[index].value, sync_data[i].value);
 
 	// Interpolate until row of next value reached or end was hit
 	while (it < sync_data[i].time && it < NUM_ROWS)
 	{
+#ifdef USED_INTER_LINEAR
 		if (inter == INTER_LINEAR) {
 			float t = (it - sync_data[index].time) / (sync_data[i].time  - sync_data[index].time);
 			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
-		}
-		else if (inter == INTER_SMOOTH) {
+		} else
+#endif
+#ifdef USED_INTER_SMOOTH
+		if (inter == INTER_SMOOTH) {
 			float t = (it - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
 			t = t * t * (3 - 2 * t);
 			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
-		}
-		else if (inter == INTER_RAMP) {
+		} else
+#endif
+#ifdef USED_INTER_RAMP
+		if (inter == INTER_RAMP) {
 			float t = (it - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
 			t = pow(t, 2.0);
 			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
-		}
-		else {
+		} else
+#endif
+		{
 			// No interpolation, keep value until next one
 			data[sync_data[index].track][(int)it] = sync_data[index].value;
 		}
 
-		//printf(" - Interpolation step at row %i: %f\n", (int)it, data[sync_data[index].track][(int)it]);
-
 		it++;
 	}
 }
+
+#endif
 
 __forceinline void __fastcall PrecalcSyncData()
 {
 	for (int i = 0; i < NUM_EVENTS; i++)
 	{
 		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
+#ifndef NO_INTER
 		inter_sync(i);
-	}
-
-	for (int r = 0; r < NUM_ROWS; r++)
-	{
-		for (int t = 0; t < NUM_TRACKS; t++)
-		{
-			printf("%f  ", data[t][r]);
-		}
-		printf("\n");
+#endif
 	}
 }
 

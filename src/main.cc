@@ -1,23 +1,25 @@
-#include <cstdio>
+#define _CRT_SECURE_NO_WARNINGS
+
 
 #ifndef DEBUG_BUILD
 
-#include "auto_sync_data.h"
 #define SYNC_PRECALC_DATA
-
+#include "auto_sync_data.h"
 #include "impl.hh"
+
+#else
+
+#include <cstdio>
 
 #endif
 
 
-#include "clinkster.h"
+#include "clinkster/clinkster.h"
 #include "fn.hh"
 #include "def.hh"
 
 
 #ifdef DEBUG_BUILD
-
-#include <stdio.h>
 
 void __fastcall Quit()
 {
@@ -56,7 +58,7 @@ void main()
 	int numframes = 0;
 
 	MSG msg;
-	SetTimer(WINDOW::hWnd, 0, 100, NULL);
+	SetTimer(WINDOW::hWnd, 0, 200, NULL);
 	while (1)
 	{
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -78,21 +80,18 @@ void main()
 			{
 				fps_to.QuadPart = time.QuadPart;
 				char buf[64];
-				printf("%4.1f fps\n", numframes / dtime);
+				sprintf(buf, "%4.1f fps", numframes / dtime);
+				SetWindowTextA(WINDOW::hWnd, buf);
 				numframes = 0;
 			}
 
 			BASS_Update(0);
-			Sleep(40);
+			Sleep(100);
 		}
 	}
 }
 
 #else
-
-#include "asmlib.hh"
-
-#pragma comment(lib, "msvcrt")
 
 void __stdcall WinMainCRTStartup()
 {
@@ -116,22 +115,15 @@ void __stdcall WinMainCRTStartup()
 			DEMO::row = (int)((p / (float)Clinkster_TicksPerSecond) * row_rate);
 			DEMO::time = DEMO::row * 0.01;
 
-			printf("Position(%f), Row(%i), Time(%f)\n", p, DEMO::row, DEMO::time);
+			//printf("Position(%f), Row(%i), Time(%f)\n", p, DEMO::row, DEMO::time);
 
 			render_gl();
 
-			Sleep(10);
+			Sleep(100);
 		}
 	}
 
 	DEMO::Die();
-}
-
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
-{
-	WinMainCRTStartup();
-
-	return 0;
 }
 
 #endif

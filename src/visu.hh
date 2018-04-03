@@ -8,11 +8,7 @@
 
 #ifdef DEBUG_BUILD
 
-#include <stdio.h>
-
 #define PIXEL_FILE "pshader.glsl"
-FILE* p_pshader;
-char* pBuf;
 
 #else
 

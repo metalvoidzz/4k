@@ -1,8 +1,8 @@
 /* COPYRIGHT (C) 2018 Julian Offenhäuser
- *
- * Convert .rocket to binary and generate
- * a C++ header
- */
+*
+* Convert .rocket to binary and generate
+* a C++ header
+*/
 
 #include <iostream>
 #include <string>
@@ -81,13 +81,31 @@ std::string GenerateHeader()
 	str += "#define INTER_LINEAR " + std::to_string(1) + "\n";
 	str += "#define INTER_SMOOTH " + std::to_string(2) + "\n";
 	str += "#define INTER_RAMP " + std::to_string(3) + "\n";
-	
+
+	str += "\n";
+
+	bool i1, i2, i3 = false;
+	for (const auto& t : DATA::tracks)
+	{
+		for (const auto& k : t.keys)
+		{
+			if (k.inter == 1) i1 = true;
+			else if (k.inter == 2) i2 = true;
+			else if (k.inter == 3) i3 = true;
+		}
+	}
+
+	if (i1) str += "#define USED_INTER_LINEAR\n";
+	if (i2) str += "#define USED_INTER_SMOOTH\n";
+	if (i3) str += "#define USED_INTER_RAMP\n";
+	if (!i1 && !i2 && !i3) str += "#define NO_INTER\n";
+
 	/*str += "\n";
 	for (int i = 0; i < DATA::tracks.size(); i++)
 	{
-		std::string s = "TRACK_" + DATA::tracks[i].name;
-		std::transform(s.begin(), s.end(), s.begin(), ::toupper);
-		str += "#define " + s + " " + std::to_string(i) + "\n";
+	std::string s = "TRACK_" + DATA::tracks[i].name;
+	std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+	str += "#define " + s + " " + std::to_string(i) + "\n";
 	}
 	str += "\n";*/
 
@@ -104,10 +122,10 @@ std::string GenerateHeader()
 	// Resource
 	str += "	#pragma bss_seg(" + std::string(1, '"') + ".sync" + std::string(1, '"') + ")\n";
 	str += "	SyncKey sync_data[NUM_EVENTS] = {\n";
-	
+
 	int tr = 0;
-	for (const auto& t: DATA::tracks) {
-		for (const auto& k: t.keys) {
+	for (const auto& t : DATA::tracks) {
+		for (const auto& k : t.keys) {
 			std::ostringstream ss;
 			ss << k.value;
 			std::string s(ss.str());
@@ -131,7 +149,7 @@ std::string GenerateData()
 
 	std::string dat;
 
-	for (const auto& t: tracks) {
+	for (const auto& t : tracks) {
 		for (const auto& k : t.keys) {
 			// Offset (2 bytes)
 			dat.append((const char*)&k.time, 2);
@@ -159,7 +177,7 @@ int main(int argc, char** argv)
 	std::string header(argv[3]);
 
 	XMLDocument doc;
-	if(doc.LoadFile(in.c_str()) != XML_SUCCESS) Error("Unable to load file: " + in);
+	if (doc.LoadFile(in.c_str()) != XML_SUCCESS) Error("Unable to load file: " + in);
 
 	XMLNode* pXml = doc.FirstChild();
 	XMLElement* pRoot = doc.FirstChildElement();

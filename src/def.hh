@@ -1,5 +1,6 @@
 /* Defines */
 
+
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
@@ -11,9 +12,6 @@
 #ifdef DEBUG_BUILD
 #include <cmath>
 #endif
-
-
-/* Error messages */
 
 
 #ifdef DEBUG_BUILD
@@ -43,16 +41,12 @@ static const char* error_msg[] = {
 #endif
 
 
-/* Demo defines */
-
-
-#define WIDTH	1366
-#define HEIGHT	768
+#define WIDTH	1280
+#define HEIGHT	720
 
 
 namespace DEMO
 {
-	void __fastcall Loop();
 #ifdef DEBUG_BUILD
 	void __fastcall Die(int8_t cause = -1);
 	HANDLE hShader;
@@ -63,6 +57,7 @@ namespace DEMO
 
 	float time = 0.0;
 	unsigned int row = 0;
+	bool done = false;
 };
 
 
@@ -94,15 +89,13 @@ namespace ROCKET
 	bool up = false;
 };
 
+
 namespace BASS
 {
 	HSTREAM stream;
 };
 
 #endif
-
-
-/* Uniform/sync stuff */
 
 
 #define NUM_UNIF	6
@@ -127,19 +120,13 @@ namespace BASS
 	uniforms[UNIF_CAMX] = GetSyncValue(TRACK_CAMX); \
 	uniforms[UNIF_CAMY] = GetSyncValue(TRACK_CAMY); \
 	uniforms[UNIF_CAMZ] = GetSyncValue(TRACK_CAMZ); \
- 
-
-/* Window defines */
 
 
 namespace WINDOW
 {
 	HWND hWnd;
+	HDC hDC;
 };
-
-
-/* Render defines */
-
 
 namespace RENDER
 {
@@ -148,17 +135,10 @@ namespace RENDER
 };
 
 
-/* Global namespace functions */
-
-
-__forceinline void __fastcall Init();
+void __fastcall Init();
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 #ifdef DEBUG_BUILD
 void __fastcall Quit();
+#endif
 void __fastcall init_gl();
 void __fastcall render_gl();
-#else
-__forceinline void __fastcall init_gl();
-__forceinline void __fastcall render_gl();
-#endif

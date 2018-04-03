@@ -1,5 +1,6 @@
 /* Functions */
 
+
 #pragma once
 
 #include "def.hh"
@@ -18,7 +19,7 @@ namespace DEMO
 		if (cause != -1)
 			MessageBox(NULL, error_msg[cause], "Error", MB_OK);
 
-		ExitProcess(0);
+		exit(0);
 	}
 #else
 	__forceinline void __fastcall Die()
@@ -26,7 +27,7 @@ namespace DEMO
 		ExitProcess(0);
 	}
 #endif
-};	
+};
 
 
 /* Window functions */
@@ -34,20 +35,21 @@ namespace DEMO
 
 LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (uMsg == WM_KEYDOWN) {
+	if (uMsg == WM_KEYDOWN)
+	{
 		if (wParam == VK_ESCAPE)
-		{
 			DEMO::Die();
-		}
 #ifdef DEBUG_BUILD
 		else if (wParam == VK_SPACE) {
 			init_gl();
 		}
 #endif
 	}
-	else if (uMsg == WM_QUIT)
+	else if (uMsg == WM_CLOSE)
 		DEMO::Die();
-	else if (uMsg == WM_TIMER) {
+#ifdef DEBUG_BUILD
+	else if (uMsg == WM_TIMER)
+	{
 		// Check for updated shaders
 		FILETIME f;
 		GetFileTime(DEMO::hShader, NULL, NULL, &f);
@@ -57,18 +59,21 @@ LRESULT CALLBACK MainWProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		FileTimeToSystemTime(&DEMO::ftime, &t_old);
 		FileTimeToSystemTime(&f, &t_new);
-		
+
 		if (t_old.wSecond != t_new.wSecond) {
 			init_gl();
 			DEMO::ftime = f;
 			printf("Reloading\n");
-		} else {
+		}
+		else {
 			DEMO::ftime = f;
 		}
 	}
+#endif
 
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
+
 static const WNDCLASSA wnd = {
 	CS_OWNDC,
 	MainWProc,
@@ -85,7 +90,7 @@ static const WNDCLASSA wnd = {
 static PIXELFORMATDESCRIPTOR pfd = {
 	sizeof(PIXELFORMATDESCRIPTOR),
 	1,
-	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
+	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
 	PFD_TYPE_RGBA,
 	32,
 	0,
@@ -101,29 +106,40 @@ static PIXELFORMATDESCRIPTOR pfd = {
 	0,
 	0,
 	0,
+	32,
 	0,
 	0,
-	0,
-	0,
+	PFD_MAIN_PLANE,
 	0,
 	0,
 	0,
 	0,
 };
 
+static DEVMODE screenSettings = { { 0 },
+#if _MSC_VER < 1400
+	0,0,148,0,0x001c0000,{ 0 },0,0,0,0,0,0,0,0,0,{ 0 },0,32,XRES,YRES,0,0,
+#else
+	0,0,156,0,0x001c0000,{ 0 },0,0,0,0,0,{ 0 },0,32, WIDTH, HEIGHT,{ 0 }, 0,
+#endif
+#if(WINVER >= 0x0400)
+	0,0,0,0,0,0,
+#if (WINVER >= 0x0500) || (_WIN32_WINNT >= 0x0400)
+	0,0
+#endif
+#endif
+};
 
 __forceinline void __fastcall Init()
 {
-#if defined(SYNC_PRECALC_DATA)
-	PrecalcSyncData();
-#endif
-
 	{
 		using namespace WINDOW;
 
 		RegisterClassA(&wnd);
 
-		DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MINIMIZEBOX | WS_SYSMENU;
+		DWORD dwStyle = WS_POPUP | WS_VISIBLE;
+
+		ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 
 		hWnd = CreateWindowEx
 		(
@@ -144,8 +160,8 @@ __forceinline void __fastcall Init()
 #ifndef DEBUG_BUILD
 		ShowCursor(0);
 #endif
-		
-		HDC hDC = GetDC(hWnd);
+
+		WINDOW::hDC = GetDC(hWnd);
 
 		int pf_handle = ChoosePixelFormat(hDC, &pfd);
 
@@ -166,10 +182,14 @@ __forceinline void __fastcall Init()
 		HGLRC hRC = wglCreateContext(hDC);
 		wglMakeCurrent(hDC, hRC);
 
-		SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 	}
 
 	init_gl();
+
+#if defined(SYNC_PRECALC_DATA)
+	PrecalcSyncData();
+#endif
 }
 
 
@@ -177,34 +197,33 @@ __forceinline void __fastcall Init()
 
 
 #ifdef DEBUG_BUILD
-void __fastcall init_gl()
-#else
-__forceinline void __fastcall init_gl()
+
+#include <fstream>
+#include <string>
+#include <streambuf>
+
 #endif
+void __fastcall init_gl()
 {
 	using namespace RENDER;
 
 	InitGLExt();
-	
+
 	unsigned short hPX = glCreateShader(GL_FRAGMENT_SHADER);
 
 #ifdef DEBUG_BUILD
 
-	p_pshader = fopen(PIXEL_FILE, "r");
+	std::ifstream str(PIXEL_FILE, std::ios::in);
+	std::string file((std::istreambuf_iterator<char>(str)), std::istreambuf_iterator<char>());
+	str.close();
 
-	fseek(p_pshader, 0L, SEEK_END);
-	long fsize = ftell(p_pshader);
-	rewind(p_pshader);
-	pBuf = (char*)calloc(1, fsize + 1);
-	fread(pBuf, fsize, 1, p_pshader);
-	fclose(p_pshader);
-
-	size_t pLen = strlen(pBuf);
+	size_t pLen = file.size();
+	char* pBuf = (char*)file.c_str();
 
 	glShaderSource(hPX, 1, &pBuf, (const GLint*)&pLen);
 
 #else
-	
+
 	size_t pLen = strlen(pshader_glsl);
 
 	glShaderSource(hPX, 1, &pshader_glsl, (const GLint*)&pLen);
@@ -229,7 +248,7 @@ __forceinline void __fastcall init_gl()
 		str = (GLchar*)malloc(logSize + 1);
 		glGetShaderInfoLog(hPX, logSize, &logSize, &str[0]);
 
-		MessageBoxA(WINDOW::hWnd, str, "Pixel shader output", MB_OK);
+		printf("%s\n", str);
 	}
 
 #endif
@@ -251,11 +270,7 @@ __forceinline void __fastcall init_gl()
 	uLoc = glGetUniformLocation(hPr, "un");
 }
 
-#ifdef DEBUG_BUILD
 void __fastcall render_gl()
-#else
-__forceinline void __fastcall render_gl()
-#endif
 {
 	using namespace RENDER;
 
@@ -272,4 +287,6 @@ __forceinline void __fastcall render_gl()
 
 	glEnd();
 	glFlush();
+
+	wglSwapLayerBuffers(WINDOW::hDC, WGL_SWAP_MAIN_PLANE);
 }

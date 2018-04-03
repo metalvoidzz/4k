@@ -1,5 +1,6 @@
 /* Implement missing c runtime functions */
 
+
 #pragma once
 
 
@@ -54,13 +55,11 @@ extern "C"
 	}
 
 	extern "C" size_t __cdecl strlen(const char*);
-#pragma intrinsic(strlen)
-#pragma function(strlen)
 	size_t __cdecl strlen(const char* ch)
 	{
-		size_t length = 0;
-		if (ch != nullptr) while (ch[length] != '\0') ++length;
-		return length;
+		const char *p = ch;
+		while (*p) ++p;
+		return p - ch;
 	}
 
 	float EXP(float y)
@@ -90,19 +89,21 @@ extern "C"
 	}
 
 	extern "C" double __cdecl pow(double, double);
-#pragma intrinsic(pow)
-#pragma function(pow)
 	double pow(double b, double p)
 	{
 		return EXP(LOG(b) * p);
 	}
 
 	extern "C" int __cdecl abs(int);
-#pragma intrinsic(abs)
-#pragma function(abs)
 	int abs(int n)
 	{
 		const int ret[2] = { n, -n };
 		return ret[n<0];
 	}
+
+	/*extern "C" __declspec(noreturn) void exit(int);
+	__declspec(noreturn) void exit(int)
+	{
+		*(int*)NULL = 666;
+	}*/
 }
