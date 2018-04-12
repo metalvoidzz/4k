@@ -123,8 +123,6 @@ namespace SYNC_DATA
 using namespace SYNC_DATA;
 
 
-#ifndef NO_INTER
-
 // Precalculate single interpolation //
 __forceinline void __fastcall inter_sync(uint16_t index)
 {
@@ -178,17 +176,24 @@ __forceinline void __fastcall inter_sync(uint16_t index)
 	}
 }
 
-#endif
+#include <cstdio>
 
 __forceinline void __fastcall PrecalcSyncData()
 {
 	for (int i = 0; i < NUM_EVENTS; i++)
 	{
 		data[sync_data[i].track][sync_data[i].time] = sync_data[i].value;
-#ifndef NO_INTER
 		inter_sync(i);
-#endif
 	}
+
+	/*for (int r = 0; r < NUM_ROWS; r++)
+	{
+		for (int t = 0; t < NUM_TRACKS; t++)
+		{
+			printf("%f ", data[t][r]);
+		}
+		printf("\n");
+	}*/
 }
 
 __forceinline float __fastcall GetSyncValue(uint16_t index)

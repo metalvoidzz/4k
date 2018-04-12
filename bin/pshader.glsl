@@ -14,12 +14,14 @@ float u_z = un[4];
 float u_scene = un[5];
 
 
-#define WIDTH 1280
-#define HEIGHT 720
+#define WIDTH 1920
+#define HEIGHT 1080
 
-#define MAX_ITER 1200
-#define MAX_DIST 200
-#define AMBIENCE 100
+#define MAX_ITER 1600
+#define MAX_DIST 300
+#define AMBIENCE 250
+
+#define PI 3.1415926
 
 
 float max3(vec3 v) {
@@ -64,7 +66,45 @@ float pModInterval1(inout float p, float size, float start, float stop) {
 	return c;
 }
 
+float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
 
+float noise(vec3 p)
+{
+    vec3 a = floor(p);
+    vec3 d = p - a;
+    d = d * d * (3.0 - 2.0 * d);
+
+    vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
+    vec4 k1 = perm(b.xyxy);
+    vec4 k2 = perm(k1.xyxy + b.zzww);
+
+    vec4 c = k2 + a.zzzz;
+    vec4 k3 = perm(c);
+    vec4 k4 = perm(c + 1.0);
+
+    vec4 o1 = fract(k3 * (1.0 / 41.0));
+    vec4 o2 = fract(k4 * (1.0 / 41.0));
+
+    vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
+    vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
+
+    return o4.y * d.y + o4.x * (1.0 - d.y);
+}
+
+float fbm(vec3 x, int octaves)
+{
+	float v = 0.0;
+	float a = 0.5;
+	vec3 shift = vec3(100);
+	for (int i = 0; i < octaves; ++i) {
+		v += a * noise(x);
+		x = x * 2.0 + shift;
+		a *= 0.5;
+	}
+	return v;
+}
 
 
 
@@ -89,21 +129,42 @@ float roundCubeSDF(vec3 p, vec3 b, float r)
   return length(max(abs(p)-b,0.0))-r;
 }
 
+vec3 gp;
+float gi_x, gi_y, gi_z;
 vec2 map(vec3 p)
 {
-	float ix = pMod1(p.x, 8.0);
-	float iy = pMod1(p.z, 8.0);
+	gp = p;
+	gi_z = pMod1(p.z, 17);
 	
-	float fm = 0.0;
+	// Floor / Ceiling
+	vec2 bounds = fOpU(
+		vec2(cubeSDF(vec3(p.x, p.y, p.z), vec3(10, 0.1, 8.5)), 1.0),
+		vec2(cubeSDF(vec3(p.x, p.y-8, p.z), vec3(10, 0.1, 10)), 1.0)
+	);
+
+	// Wall material
+	//float wm = mod(gi_z, 2.0) == 0 ? 0.0 : 2.0;
+	float wm = 0.0;
 	
-	vec2 wg = fOpU (
-		vec2(cubeSDF(vec3(p.x, p.y-6, p.z), vec3(4,0.1,4)), 1.0),
-		vec2(cubeSDF(vec3(p.x, p.y, p.z), vec3(4,0.1,4)), fm)
+	bounds = fOpU(
+		fOpU(
+			bounds,
+			// Cubes on the side
+			fOpU(
+				vec2(cubeSDF(vec3(p.x+10.2, p.y-0.1, p.z), vec3(0.2, 8, 10.0)), 3.0),
+				vec2(cubeSDF(vec3(p.x-10.2, p.y-0.1, p.z), vec3(0.2, 8, 10.0)), 3.0)
+			)
+
+		),
+		//bounds,
+		// Walls
+		fOpU(
+			vec2(cubeSDF(vec3(p.x+10, p.y-4, p.z), vec3(0.1, 4.1, 8.0)), wm),
+			vec2(cubeSDF(vec3(p.x-10, p.y-4, p.z), vec3(0.1, 4.1, 8.0)), wm)
+		)
 	);
 	
-	vec2 pillar = vec2(roundCubeSDF(vec3(p.x, p.y-3, p.z), vec3(0.3, 3, 0.3), 0.04), 1.0);
-	
-	vec2 s = fOpU(pillar, wg);
+	vec2 s = bounds;
 	
 	return s;
 }
@@ -124,8 +185,8 @@ vec2 trace(vec3 ro, vec3 rd)
     return vec2(MAX_DIST, 0.0);
 }
 
-float calculateAO(vec3 p, vec3 n){
-
+float calculateAO(vec3 p, vec3 n)
+{
     const float AO_SAMPLES = 5.0;
     float r = 0.0, w = 1.0, d;
     
@@ -160,13 +221,25 @@ vec3 getNormal( in vec3 p ){
     ));
 }
 
-vec3 doColor(in vec3 sp, in vec3 rd, in vec3 sn, in vec3 lp, vec3 base) {
+vec3 doColor(in vec3 sp, in vec3 rd, in vec3 sn, in vec3 lp, vec3 base)
+{
+	/*vec3 ld = lp-sp;
+    float lDist = max(length(ld), 0.001);
+    ld /= lDist;
     
+    float atten = 1. / (1.0 + lDist*0.2 + lDist*lDist*0.1);
+    float diff = max(dot(sn, ld), 0.);
+    float spec = pow(max( dot( reflect(-ld, sn), -rd ), 0.0 ), 8.0);
+    
+	vec3 sceneCol = (base*(diff + 0.15) + vec3(1., .6, .2)*spec*2.) * atten;
+
+    return sceneCol*AMBIENCE*.25;*/
+	
 	vec3 ld = lp-sp;
 	float distlpsp = max(length(ld), 0.001);
 	ld /= distlpsp;
 	
-	vec3 color;
+	vec3 color = base;
 
 	// Attenuation
 	float atten = min(1./(distlpsp), 1);
@@ -187,25 +260,11 @@ vec3 doColor(in vec3 sp, in vec3 rd, in vec3 sn, in vec3 lp, vec3 base) {
     float sun = clamp( dot( sn, sunDir ), 0.0, 1.0 );
     float ind = clamp( dot( sn, normalize(sunDir*vec3(-1.0,0.0,-1.0)) ), 0.0, 1.0 );
 	// Final color
-	vec3 li = sun*vec3(1.64,1.27,0.99)*pow(vec3(shadow),vec3(1.0,1.2,1.5));
-	li += sky*vec3(0.16,0.20,0.28)*ao;
-	li += ind*vec3(0.40,0.28,0.20)*ao;
+	vec3 li = sky*vec3(0.16,0.20,0.28)*ao + ind*vec3(0.40,0.28,0.20)*ao;
 	color = li * base + (spec*color*.4);
-	color *= (diff*.5)*atten*AMBIENCE;
+	color *= fre*diff*atten*AMBIENCE;
 	
 	return color;
-	
-	/*vec3 ld = lp-sp;
-    float lDist = max(length(ld), 0.001);
-    ld /= lDist;
-    
-    float atten = 1. / (1.0 + lDist*0.2 + lDist*lDist*0.1);
-    float diff = max(dot(sn, ld), 0.);
-    float spec = pow(max( dot( reflect(-ld, sn), -rd ), 0.0 ), 8.0);
-    
-	vec3 sceneCol = (base*(diff + 0.15) + vec3(1., .6, .2)*spec*2.) * atten;
-
-    return sceneCol*AMBIENCE;*/
 }
 
 void main()
@@ -214,29 +273,47 @@ void main()
     vec3 rd = normalize(vec3(uv, 1.0));
     vec3 ro = vec3(u_x, u_y, u_z);
     //vec3 lp = vec3(sin(u_time), cos(sin(u_time)), cos(sin(u_time))*.5);
-	vec3 lp = ro;
+	vec3 lp = vec3(ro.x, ro.y+20, ro.z);
 	
     vec2 t = trace(ro, rd);
-    
+
 	vec3 color;
 	float shiny;
 	if(t.y == 0.0)
 	{
-		color = vec3(0.1, 0.1, 0.1);
-		shiny = 0.3;
+		// Wall material
+		
+		//vec3 c1 = vec3(cos(sin(u_time)), 0.1, clamp(sin(u_time)*.2, 0.0, 1.0));
+		vec3 c1 = vec3(0.6, 0.1, 0.2);
+		vec3 c2 = vec3(1.0, 1.0, 1.0);
+		
+		color = mix(
+			c1,
+			c2,
+			step(
+				1.,
+				abs(gp.y + 0.75 * -5.0
+				+ sin(gp.z * 0.20 + u_time * .8) - fbm(gp * 1.05, 6) * 2)
+			)
+		);
+		
+		shiny = 0.04;
 	}else if(t.y == 1.0) {
-		color = vec3(0.3, 0.1, 0.1);
-		shiny = 0;
+		color = vec3(0.2, 0.2, 0.2);
+		shiny = 1.4;
 	}else if(t.y == 2.0) {
-		color = vec3(0.1, 0.3, 0.2);
-		shiny = 0.2;
+		color = vec3(1.0, 1.0, 1.0);
+		shiny = 0.04;
+	}else if(t.y == 3.0) {
+		color = vec3(0.2, 0.2, 0.2);
+		shiny = 0.02;
 	}
 	
 	float fog = smoothstep(0., .95, t.x/MAX_DIST);
     ro += rd*t.x;
     vec3 sn = getNormal(ro);
-    vec3 sceneColor = doColor(ro, rd, sn, lp, color);    
-
+    vec3 sceneColor = doColor(ro, rd, sn, lp, color);
+	
 	// Reflection //
     
     rd = reflect(rd, sn);

@@ -73,6 +73,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>bin\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)bin</OutDir>
@@ -92,7 +93,8 @@
     </PreLinkEvent>
     <Link>
       <AdditionalLibraryDirectories>thirdparty\bass\c;thirdparty\librocket\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bass.lib;librocket.lib;winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;winmm.lib;bass.lib;librocket.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -131,17 +133,17 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>opengl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>bin\shader_minifier.exe --preserve-externals bin\pshader.glsl -o data\auto_pshader.h &amp;&amp; bin\datagen.exe data\sync.rocket data\sync.bin data\auto_sync_data.h</Command>
+      <Command>bin\shader_minifier.exe --preserve-externals --preserve-all-globals bin\pshader.glsl -o data\auto_pshader.h &amp;&amp; bin\datagen.exe data\sync.rocket data\sync.bin data\auto_sync_data.h</Command>
     </PreBuildEvent>
     <PreLinkEvent>
       <Command>cd src &amp;&amp; C:\Python27\python.exe ..\bin\RenoiseConvert.py ..\data\music.xrns ..\data\music.asm &amp;&amp; ..\bin\nasmw -f win32 ..\data\music.asm -I..\data -o ..\data\music.obj &amp;&amp; ..\bin\nasmw -f win32 ..\thirdparty\clinkster\clinkster.asm -I ..\data\ -o ..\data\clinkster.obj</Command>
     </PreLinkEvent>
     <PostBuildEvent>
-      <Command>bin\crinkler.exe bin\Release\main.obj data\music.obj data\clinkster.obj kernel32.Lib Gdi32.Lib user32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:bin/intro.exe /PRIORITY:NORMAL /NOINITIALIZERS /TRUNCATEFLOATS /OVERRIDEALIGNMENTS /UNALIGNCODE /COMPMODE:SLOW /UNSAFEIMPORT /HASHSIZE:150 /HASHTRIES:500 /ORDERTRIES:1000 /TINYHEADER /TINYIMPORT </Command>
+      <Command>bin\crinkler.exe bin\Release\main.obj data\music.obj data\clinkster.obj kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib OpenGL32.Lib WinMM.Lib /PRINT:IMPORTS /SUBSYSTEM:WINDOWS /PROGRESSGUI /ENTRY:WinMainCRTStartup /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib";"C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86" /OUT:bin/intro.exe /PRIORITY:NORMAL /UNALIGNCODE /HASHSIZE:150 /HASHTRIES:500 /ORDERTRIES:1000 /TINYIMPORT </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

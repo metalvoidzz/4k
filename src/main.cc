@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-
 #ifndef DEBUG_BUILD
 
 #define SYNC_PRECALC_DATA
@@ -119,11 +118,22 @@ void __stdcall WinMainCRTStartup()
 
 			render_gl();
 
-			Sleep(100);
+			Sleep(10);
 		}
 	}
 
 	DEMO::Die();
+}
+
+void main()
+{
+	WinMainCRTStartup();
+}
+
+int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+	WinMainCRTStartup();
+	return 0;
 }
 
 #endif

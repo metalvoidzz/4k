@@ -84,36 +84,27 @@ static const WNDCLASSA wnd = {
 	NULL,
 	NULL,
 	NULL,
-	" ",
+	"c",
 };
 
 static PIXELFORMATDESCRIPTOR pfd = {
 	sizeof(PIXELFORMATDESCRIPTOR),
 	1,
-	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
+	PFD_DOUBLEBUFFER,
 	PFD_TYPE_RGBA,
-	32,
+	24,
+	0, 0, 0, 0, 0, 0,
 	0,
 	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
+	0,  
+	0, 0, 0, 0,
 	32,
 	0,
 	0,
 	PFD_MAIN_PLANE,
 	0,
-	0,
-	0,
-	0,
+	0, 0, 0
 };
 
 static DEVMODE screenSettings = { { 0 },
@@ -130,22 +121,22 @@ static DEVMODE screenSettings = { { 0 },
 #endif
 };
 
-__forceinline void __fastcall Init()
+void __fastcall Init()
 {
 	{
 		using namespace WINDOW;
 
 		RegisterClassA(&wnd);
 
-		DWORD dwStyle = WS_POPUP | WS_VISIBLE;
+		DWORD dwStyle = WS_VISIBLE | WS_POPUP;
 
 		ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 
-		hWnd = CreateWindowEx
+		hWnd = CreateWindowExA
 		(
 			WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
+			"c",
 			" ",
-			"",
 			dwStyle,
 			0,
 			0,
@@ -157,7 +148,9 @@ __forceinline void __fastcall Init()
 			NULL
 		);
 
-#ifndef DEBUG_BUILD
+#ifdef DEBUG_BUILD
+		if (!hWnd) DEMO::Die(ERR_INIT_WINAPI);
+#else
 		ShowCursor(0);
 #endif
 
