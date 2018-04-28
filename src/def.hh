@@ -9,6 +9,8 @@
 #include <windows.h>
 #include <inttypes.h>
 
+#include <GL/gl.h>
+
 #ifdef DEBUG_BUILD
 #include <cmath>
 #endif
@@ -41,8 +43,8 @@ static const char* error_msg[] = {
 #endif
 
 
-#define WIDTH	1920
-#define HEIGHT	1080
+#define WIDTH	1280
+#define HEIGHT	720
 
 
 namespace DEMO
@@ -56,7 +58,7 @@ namespace DEMO
 #endif
 
 	float time = 0.0;
-	unsigned int row = 0;
+	uint16_t row = 0;
 	bool done = false;
 };
 
@@ -128,10 +130,25 @@ namespace WINDOW
 	HDC hDC;
 };
 
+/*struct TEXTURE_t
+{
+	void* data;
+	uint16_t w, h;
+};*/
+
+#define NUM_TEX 1
+
 namespace RENDER
 {
-	int uLoc;
+	// Shader program
+	GLuint hPr;
+	// Uniforms
+	uint16_t uLoc;
 	float uniforms[NUM_UNIF];
+	/*// Textures
+	unsigned int hTex[NUM_TEX];
+	uint16_t uTex[NUM_TEX];
+	TEXTURE_t tex[NUM_TEX];*/
 };
 
 

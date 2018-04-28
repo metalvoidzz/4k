@@ -77,15 +77,11 @@ void main()
 			const float dtime = (time.QuadPart - fps_to.QuadPart) / (float)tps.QuadPart;
 			if (dtime > 0.2f)
 			{
-				fps_to.QuadPart = time.QuadPart;
-				char buf[64];
-				sprintf(buf, "%4.1f fps", numframes / dtime);
-				SetWindowTextA(WINDOW::hWnd, buf);
 				numframes = 0;
 			}
 
 			BASS_Update(0);
-			Sleep(100);
+			Sleep(50);
 		}
 	}
 }
@@ -118,16 +114,11 @@ void __stdcall WinMainCRTStartup()
 
 			render_gl();
 
-			Sleep(10);
+			Sleep(50);
 		}
 	}
 
 	DEMO::Die();
-}
-
-void main()
-{
-	WinMainCRTStartup();
 }
 
 int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int)

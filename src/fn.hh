@@ -90,8 +90,7 @@ static const WNDCLASSA wnd = {
 static PIXELFORMATDESCRIPTOR pfd = {
 	sizeof(PIXELFORMATDESCRIPTOR),
 	1,
-	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
-	PFD_DOUBLEBUFFER,
+	PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
 	PFD_TYPE_RGBA,
 	24,
 	0, 0, 0, 0, 0, 0,
@@ -102,12 +101,12 @@ static PIXELFORMATDESCRIPTOR pfd = {
 	32,
 	0,
 	0,
-	PFD_MAIN_PLANE,
+	0,
 	0,
 	0, 0, 0
 };
 
-static DEVMODE screenSettings = { { 0 },
+static DEVMODEA screenSettings = { { 0 },
 #if _MSC_VER < 1400
 	0,0,148,0,0x001c0000,{ 0 },0,0,0,0,0,0,0,0,0,{ 0 },0,32,XRES,YRES,0,0,
 #else
@@ -128,16 +127,14 @@ void __fastcall Init()
 
 		RegisterClassA(&wnd);
 
-		DWORD dwStyle = WS_VISIBLE | WS_POPUP;
+		if(MessageBoxA(NULL, "Fullscreen?", "Divergence by metalvoidzz", MB_YESNO) == IDYES)
+			ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 
-		ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
-
-		hWnd = CreateWindowExA
+		hWnd = CreateWindowA
 		(
-			WS_EX_APPWINDOW | WS_EX_WINDOWEDGE,
 			"c",
 			" ",
-			dwStyle,
+			WS_VISIBLE | WS_POPUP,
 			0,
 			0,
 			WIDTH,
@@ -174,11 +171,10 @@ void __fastcall Init()
 		hDC = GetDC(hWnd);
 		HGLRC hRC = wglCreateContext(hDC);
 		wglMakeCurrent(hDC, hRC);
-
-		//SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
 	}
 
 	init_gl();
+	//init_tex();
 
 #if defined(SYNC_PRECALC_DATA)
 	PrecalcSyncData();
@@ -194,6 +190,7 @@ void __fastcall Init()
 #include <fstream>
 #include <string>
 #include <streambuf>
+#include <iostream>
 
 #endif
 void __fastcall init_gl()
@@ -202,24 +199,25 @@ void __fastcall init_gl()
 
 	InitGLExt();
 
-	unsigned short hPX = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint hPX = glCreateShader(GL_FRAGMENT_SHADER);
 
 #ifdef DEBUG_BUILD
 
-	std::ifstream str(PIXEL_FILE, std::ios::in);
+	std::ifstream str(PIXEL_FILE, std::ios::binary);
 	std::string file((std::istreambuf_iterator<char>(str)), std::istreambuf_iterator<char>());
 	str.close();
 
-	size_t pLen = file.size();
-	char* pBuf = (char*)file.c_str();
+	const char* s = file.c_str();
+	GLint l = file.length();
 
-	glShaderSource(hPX, 1, &pBuf, (const GLint*)&pLen);
+	glShaderSource(hPX, 1, &s, &l);
 
 #else
 
-	size_t pLen = strlen(pshader_glsl);
+	GLint pLen = strlen(pshader_glsl);
 
-	glShaderSource(hPX, 1, &pshader_glsl, (const GLint*)&pLen);
+	glShaderSource(hPX, 1, &pshader_glsl, &pLen);
+
 
 #endif
 
@@ -235,18 +233,16 @@ void __fastcall init_gl()
 	if (!success)
 	{
 		GLint logSize = 0;
-		GLchar* str = (GLchar*)malloc(logSize + 1);
-
 		glGetShaderiv(hPX, GL_INFO_LOG_LENGTH, &logSize);
-		str = (GLchar*)malloc(logSize + 1);
+		GLchar* str = (GLchar*)malloc(logSize + 1);
 		glGetShaderInfoLog(hPX, logSize, &logSize, &str[0]);
 
-		printf("%s\n", str);
+		std::cout << str << "\n";
 	}
 
 #endif
 
-	unsigned int hPr = glCreateProgram();
+	hPr = glCreateProgram();
 
 	glAttachShader(hPr, hPX);
 	glLinkProgram(hPr);
@@ -280,6 +276,4 @@ void __fastcall render_gl()
 
 	glEnd();
 	glFlush();
-
-	wglSwapLayerBuffers(WINDOW::hDC, WGL_SWAP_MAIN_PLANE);
 }

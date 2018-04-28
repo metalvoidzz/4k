@@ -4,8 +4,8 @@
 #pragma once
 
 
-static const float bpm = 104.0f;
-static const int rpb = 8;
+const float bpm = 180.0f;
+const float rpb = 8.0f;
 static const float row_rate = ((float)bpm / 60) * rpb;
 
 
@@ -128,18 +128,6 @@ __forceinline void __fastcall inter_sync(uint16_t index)
 {
 	int i = index + 1;
 	int inter = sync_data[index].inter;
-	// If no value found, keep current one
-	float next_val = sync_data[index].value;
-
-	// Get next value
-	while (i < NUM_EVENTS)
-	{
-		if (sync_data[i].time > sync_data[index].time && sync_data[i].value != 0 && sync_data[i].track == sync_data[index].track) {
-			next_val = sync_data[i].value;
-			break;
-		}
-		i++;
-	}
 	
 	// Start at current row, but don't override its value
 	float it = sync_data[index].time + 1;
@@ -160,13 +148,13 @@ __forceinline void __fastcall inter_sync(uint16_t index)
 			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
 		} else
 #endif
-#ifdef USED_INTER_RAMP
+/*#ifdef USED_INTER_RAMP
 		if (inter == INTER_RAMP) {
 			float t = (it - sync_data[index].time) / (sync_data[i].time - sync_data[index].time);
 			t = pow(t, 2.0);
 			data[sync_data[index].track][(int)it] = sync_data[index].value + (sync_data[i].value - sync_data[index].value) * t;
 		} else
-#endif
+#endif*/
 		{
 			// No interpolation, keep value until next one
 			data[sync_data[index].track][(int)it] = sync_data[index].value;
