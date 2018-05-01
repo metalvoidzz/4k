@@ -108,7 +108,7 @@ static PIXELFORMATDESCRIPTOR pfd = {
 
 static DEVMODEA screenSettings = { { 0 },
 #if _MSC_VER < 1400
-	0,0,148,0,0x001c0000,{ 0 },0,0,0,0,0,0,0,0,0,{ 0 },0,32,XRES,YRES,0,0,
+	0,0,148,0,0x001c0000,{ 0 },0,0,0,0,0,0,0,0,0,{ 0 },0,32,WIDTH,HEIGHT,0,0,
 #else
 	0,0,156,0,0x001c0000,{ 0 },0,0,0,0,0,{ 0 },0,32, WIDTH, HEIGHT,{ 0 }, 0,
 #endif
@@ -127,14 +127,28 @@ void __fastcall Init()
 
 		RegisterClassA(&wnd);
 
-		if(MessageBoxA(NULL, "Fullscreen?", "Divergence by metalvoidzz", MB_YESNO) == IDYES)
+#ifndef SIZE_SAVING
+		DWORD st = WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
+		if (MessageBoxA(NULL, "Fullscreen?", "Divergence by metalvoidzz", MB_YESNO) == IDYES)
+		{
 			ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
+			st = WS_VISIBLE | WS_POPUP;
+#ifndef DEBUG_BUILD
+			ShowCursor(0);
+#endif
+		}
+#else
+		DWORD st = WS_VISIBLE | WS_POPUP;
+		ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
+		ShowCursor(0);
+#endif
 
 		hWnd = CreateWindowA
 		(
 			"c",
 			" ",
-			WS_VISIBLE | WS_POPUP,
+			st,
 			0,
 			0,
 			WIDTH,
@@ -147,8 +161,6 @@ void __fastcall Init()
 
 #ifdef DEBUG_BUILD
 		if (!hWnd) DEMO::Die(ERR_INIT_WINAPI);
-#else
-		ShowCursor(0);
 #endif
 
 		WINDOW::hDC = GetDC(hWnd);
@@ -223,7 +235,6 @@ void __fastcall init_gl()
 
 	glCompileShader(hPX);
 
-
 #ifdef DEBUG_BUILD
 
 	GLint success;
@@ -256,7 +267,7 @@ void __fastcall init_gl()
 
 	glUseProgram(hPr);
 
-	uLoc = glGetUniformLocation(hPr, "un");
+	//uLoc = glGetUniformLocation(hPr, "un");
 }
 
 void __fastcall render_gl()

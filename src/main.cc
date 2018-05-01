@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+
 #ifndef DEBUG_BUILD
 
 #define SYNC_PRECALC_DATA
@@ -90,8 +91,8 @@ void main()
 
 void __stdcall WinMainCRTStartup()
 {
-	Init();
 	Clinkster_GenerateMusic();
+	Init();
 	Clinkster_StartMusic();
 
 	MSG msg;
@@ -108,7 +109,7 @@ void __stdcall WinMainCRTStartup()
 			if (p > Clinkster_MusicLength) break;
 
 			DEMO::row = (int)((p / (float)Clinkster_TicksPerSecond) * row_rate);
-			DEMO::time = DEMO::row * 0.01;
+			DEMO::time = (float)DEMO::row / row_rate;
 
 			//printf("Position(%f), Row(%i), Time(%f)\n", p, DEMO::row, DEMO::time);
 

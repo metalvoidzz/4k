@@ -16,6 +16,11 @@
 #endif
 
 
+// Activates super secret size-saving mode
+
+//#define SIZE_SAVING
+
+
 #ifdef DEBUG_BUILD
 
 #define ERR_UNDEFINED	0
@@ -57,9 +62,8 @@ namespace DEMO
 	__forceinline void __fastcall Die();
 #endif
 
-	float time = 0.0;
-	uint16_t row = 0;
-	bool done = false;
+	static float time = 0.0;
+	static uint16_t row = 0;
 };
 
 

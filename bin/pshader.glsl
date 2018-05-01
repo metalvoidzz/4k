@@ -1,10 +1,8 @@
-#version 130
-
-
+#version 120
+#extension GL_EXT_gpu_shader4 : enable
 
 
 uniform float un[6];
-
 
 float u_time = un[0];
 float u_alpha = un[1];
@@ -14,14 +12,11 @@ float u_z = un[4];
 // account for .000001 difference
 float u_scene = round(un[5]);
 
-
 #define WIDTH 1280
 #define HEIGHT 720
-
-#define MAX_ITER 1600
-float MAX_DIST;
 #define AMBIENCE 300
 
+float MAX_DIST;
 
 float max3(vec3 v) {
 	return max(max(v.x, v.y), v.z);
@@ -53,25 +48,20 @@ float pModInterval1(inout float p, float size, float start, float stop) {
 	return c;
 }
 
-vec2 fOpU(in vec2 obj0, in vec2 obj1)
-{
-	if (obj0.x < obj1.x)
-		return obj0;
-	else
-		return obj1;
+vec2 fOpU(in vec2 obj0, in vec2 obj1) {
+	return (obj0.x < obj1.x) ? obj0 : obj1;
 }
 
 float noise(in vec3 p)
 {
     const vec3 s = vec3(7, 157, 113);
-	vec3 ip = floor(p); // Unique unit cell ID.
+	vec3 ip = floor(p);
     vec4 h = vec4(0., s.yz, s.y + s.z) + dot(ip, s);
-	p -= ip; // Cell's fractional component.
+	p -= ip;
     p = p*p*(3. - 2.*p);
     h = mix(fract(sin(h)*43758.5453), fract(sin(h + s.x)*43758.5453), p.x);
     h.xy = mix(h.xz, h.yw, p.y);
-    return mix(h.x, h.y, p.z); // Range: [0, 1].
-	
+    return mix(h.x, h.y, p.z);
 }
 
 mat3 m = mat3( 0.00,  1.60,  1.20, -1.60,  0.72, -0.96, -1.20, -0.96,  1.28 );
@@ -152,6 +142,11 @@ vec3 stars(vec3 p)
 	return c*c*.7;
 }
 
+float cableSDF(vec3 p)
+{
+	return length(max(abs(p-vec3(cos(p.z*2)*.5,2+cos(p.z)*.3, 0))-vec3(.1,.02, 100),vec3(.0)));
+}
+
 vec3 gp;
 float gi_x, gi_y, gi_z;
 vec2 map(vec3 p)
@@ -176,11 +171,15 @@ vec2 map(vec3 p)
 	
 	vec2 fl = fOpU(vec2(sphereSDF(p1, 3.0), 3.0), vec2(cubeSDF(p1, vec3(6, 0.25, 6)), 4.0));
 	
-	if(u_scene == 0 || u_scene == 2 || u_scene == 4)
+	// Cable
+	
+	vec2 cab = vec2(cableSDF(vec3(p1.x, p1.y, p1.z)), 2.0);
+	
+	if(u_scene == 0 || u_scene == 2 || u_scene == 4 || u_scene == 6)
 	{
 		MAX_DIST = 300;
 		
-		gi_z = pMod1(p.z, 18);
+		gi_z = pModInterval1(p.z, 18, 0, 40);
 		
 		// Ground plane
 		
@@ -201,8 +200,6 @@ vec2 map(vec3 p)
 			gp,
 			vec2(cubeSDF(vec3(p.x, p.y-8, p.z), vec3(10.2, 0.2, 12)), 1.0)
 		);
-
-		// Wall material
 		
 		bounds = fOpU(
 			bounds,
@@ -230,24 +227,25 @@ vec2 map(vec3 p)
 		gi_y = pMod1(p.y, 10);
 		
 		s = fOpU(brid, bounds);
-		
+
 		// The part where the scenes merge together
 		
 		if(u_scene == 5) s = fOpU(s, fl);
 	}else if(u_scene == 1 || u_scene == 3 || u_scene == 5) {
 		MAX_DIST = 600;
-		s = fl;
+
+		s = fOpU(fl, cab);
 	}
 
 	
 	return s;
 }
 
-vec2 trace(vec3 ro, vec3 rd)
+vec2 trace(vec3 ro, vec3 rd, float iter)
 {
 	float depth = 0;
 	vec2 dist;
-    for (int i = 0; i < MAX_ITER; i++)
+    for (int i = 0; i < iter; i++)
 	{
         dist = map(ro + depth * rd);
         if (dist.x < 0.0001) {
@@ -261,21 +259,8 @@ vec2 trace(vec3 ro, vec3 rd)
 	return vec2(MAX_DIST, 0);
 }
 
-float calculateAO(vec3 p, vec3 n)
+vec3 getNormal( in vec3 p )
 {
-    const float AO_SAMPLES = 5.0;
-    float r = 0.0, w = 1.0, d;
-    
-    for (float i=1.0; i<AO_SAMPLES+1.1; i++) {
-        d = i/AO_SAMPLES;
-        r += w*(d - map(p + n*d).x);
-        w *= 0.5;
-    }
-    
-    return 1.0-clamp(r,0.0,1.0);
-}
-
-vec3 getNormal( in vec3 p ){
     return normalize(vec3(
         map(vec3(p.x + 0.0001, p.y, p.z)).x - map(vec3(p.x - 0.0001, p.y, p.z)).x,
         map(vec3(p.x, p.y + 0.0001, p.z)).x - map(vec3(p.x, p.y - 0.0001, p.z)).x,
@@ -289,10 +274,15 @@ vec3 doColor(in vec3 sp, in vec3 rd, in vec3 sn, in vec3 lp, vec3 base)
 	float distlpsp = max(length(ld), 0.001);
 	ld /= distlpsp;
 	vec3 color;
-	float ao = calculateAO(sp, sn);
-	vec3 sunDir = vec3(0.0, 0.0, 0.0);
-    float ind = clamp( dot( sn, normalize(sunDir*vec3(-1.0,0.0,-1.0)) ), 0.0, 1.0 );
-	vec3 li = clamp( 0.5 + 0.5 * sn.y, 0.0, 1.0 )*vec3(0.16,0.20,0.28)*ao + ind*vec3(0.40,0.28,0.20)*ao;
+    float r = 0.0, w = 1.0, d;    
+    for (float i = 1.0; i < 5.1; i++)
+	{
+        d = i/5;
+        r += w*(d - map(sp + sn*d).x);
+        w *= 0.5;
+    }
+    float ao = 1.0-clamp(r,0.0,1.0);
+	vec3 li = clamp( 0.5 + 0.5 * sn.y, 0.0, 1.0 )*vec3(0.16,0.20,0.28)*ao;
 	color = li * base + (pow(max( dot( reflect(-ld, sn), -rd ), 0.0 ), 8.)*color*.4);
 	color *= pow( clamp(dot(sn, rd) + 1., .0, 1.), 1.)*max( dot(sn, ld), 0.0)*min(1./(distlpsp), 1)*AMBIENCE;
 	
@@ -306,7 +296,7 @@ void main()
     vec3 ro = vec3(u_x, u_y, u_z);
 	vec3 lp = vec3(ro.x, ro.y, ro.z);
 	
-    vec2 t = trace(ro, rd);
+    vec2 t = trace(ro, rd, 1600);
 	
 	if (t.x > MAX_DIST - 0.0001)
 	{
@@ -342,10 +332,13 @@ void main()
 		color = vec3(0.2, 0.2, 0.2);
 		shiny = 0.6;
 	}else if(t.y == 2.0) {
+		// Floor/cable material
 		color = vec3(0.1, 0.3, 0.2);
 		shiny = 0.09;
 	}else if(t.y == 3.0) {
-		color = vec3(0.2, 0.1, 0.5);
+		float ti = u_scene >= 3 ? u_time : 0;
+		// Sphere material
+		color = vec3(0.2, clamp(sin(ti), 0.0, 0.7), 0.5);
 		shiny = 2.5;
 	}else if(t.y == 4.0) {
 		color = vec3(0.01);
@@ -358,7 +351,7 @@ void main()
 	// Reflection //
     
     rd = reflect(rd, sn);
-    t = trace(ro +  rd*.01, rd);
+    t = trace(ro +  rd*.01, rd, 1200);
     ro += rd*t.x;
     sn = getNormal(ro);
     sceneColor += doColor(ro, rd, sn, lp, color)*shiny;
@@ -370,7 +363,7 @@ void main()
 	// Fog
     sceneColor = mix(sceneColor, vec3(0), fog);
 	// Grain
-	sceneColor = mix(sceneColor, vec3(fract(sin(dot(uv.xy, vec2(17.0,180.)+u_time))* 2500)), 0.004);
+	sceneColor = mix(sceneColor, vec3(fract(sin(dot(uv.xy, vec2(17.0,180.)+u_time))* 2500)), 0.002);
 	
 	gl_FragColor = vec4(sqrt(clamp(sceneColor, 0.0, 1.0))-u_alpha, 1.0);
 }

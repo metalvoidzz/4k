@@ -99,7 +99,6 @@ typedef char GLchar;
 	GLE(void, CompileShader, GLuint shader) \
 	GLE(GLuint, CreateProgram, void) \
 	GLE(GLuint, CreateShader, GLenum type) \
-	GLE(GLint, GetUniformLocation, GLuint program, const GLchar *name) \
 	GLE(void, LinkProgram, GLuint program) \
 	GLE(void, ShaderSource, GLuint shader, GLsizei count, const GLchar* const *string, const GLint *length) \
 	GLE(void, Uniform1fv, GLint location, GLsizei count, const GLfloat* value); \
