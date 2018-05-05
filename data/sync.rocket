@@ -8,18 +8,20 @@ beatsPerMin="125">
 		<key row="430" value="-60.000000" interpolation="1" />
 		<key row="431" value="0.000000" interpolation="0" />
 		<key row="659" value="-4.000000" interpolation="0" />
-		<key row="660" value="0.000000" interpolation="0" />
+		<key row="660" value="-18.000000" interpolation="0" />
 		<key row="880" value="-8.000000" interpolation="1" />
 		<key row="1103" value="-100.000000" interpolation="1" />
-		<key row="1104" value="-4.000000" interpolation="1" />
-		<key row="1324" value="-45.000000" interpolation="0" />
-		<key row="1325" value="0.000000" interpolation="0" />
+		<key row="1104" value="0.000000" interpolation="1" />
+		<key row="1324" value="-30.000000" interpolation="1" />
+		<key row="1325" value="4.000000" interpolation="0" />
+		<key row="1436" value="-4.000000" interpolation="0" />
+		<key row="1542" value="0.000000" interpolation="0" />
 	</track>
 	<track name="CamY" folded="0" muteKeyCount="0" color="ffb28050">
 		<key row="0" value="4.000000" interpolation="0" />
 		<key row="660" value="4.000000" interpolation="0" />
-		<key row="1104" value="4.000000" interpolation="1" />
-		<key row="1324" value="-90.000000" interpolation="0" />
+		<key row="1104" value="10.000000" interpolation="1" />
+		<key row="1324" value="-40.000000" interpolation="1" />
 		<key row="1325" value="4.000000" interpolation="0" />
 	</track>
 	<track name="CamZ" folded="0" muteKeyCount="0" color="ffa9b250">
@@ -29,7 +31,14 @@ beatsPerMin="125">
 		<key row="659" value="160.000000" interpolation="1" />
 		<key row="880" value="260.000000" interpolation="1" />
 		<key row="881" value="-9.700000" interpolation="0" />
-		<key row="1325" value="4.000000" interpolation="0" />
+		<key row="1104" value="6.000000" interpolation="0" />
+		<key row="1325" value="4.000000" interpolation="1" />
+		<key row="1435" value="70.000000" interpolation="1" />
+		<key row="1436" value="80.000000" interpolation="1" />
+		<key row="1542" value="150.000000" interpolation="1" />
+		<key row="1766" value="300.000000" interpolation="1" />
+		<key row="1767" value="620.000000" interpolation="1" />
+		<key row="1977" value="710.000000" interpolation="0" />
 	</track>
 	<track name="Alpha" folded="0" muteKeyCount="0" color="ff60b250">
 		<key row="0" value="0.000000" interpolation="0" />
@@ -52,6 +61,25 @@ beatsPerMin="125">
 		<key row="1311" value="0.000000" interpolation="2" />
 		<key row="1324" value="1.000000" interpolation="2" />
 		<key row="1330" value="0.000000" interpolation="0" />
+		<key row="1529" value="0.000000" interpolation="2" />
+		<key row="1540" value="1.000000" interpolation="2" />
+		<key row="1541" value="1.000000" interpolation="2" />
+		<key row="1542" value="1.000000" interpolation="2" />
+		<key row="1543" value="1.000000" interpolation="2" />
+		<key row="1544" value="1.000000" interpolation="2" />
+		<key row="1551" value="0.000000" interpolation="0" />
+		<key row="1753" value="0.000000" interpolation="2" />
+		<key row="1765" value="1.000000" interpolation="0" />
+		<key row="1766" value="1.000000" interpolation="0" />
+		<key row="1767" value="1.000000" interpolation="2" />
+		<key row="1772" value="0.000000" interpolation="0" />
+		<key row="1949" value="0.000000" interpolation="2" />
+		<key row="1975" value="1.000000" interpolation="2" />
+		<key row="1976" value="1.000000" interpolation="2" />
+		<key row="1977" value="1.000000" interpolation="2" />
+		<key row="1978" value="1.000000" interpolation="2" />
+		<key row="1979" value="1.000000" interpolation="2" />
+		<key row="1987" value="0.000000" interpolation="0" />
 	</track>
 	<track name="Scene" folded="0" muteKeyCount="0" color="ff4fb292">
 		<key row="0" value="0.000000" interpolation="0" />
@@ -61,6 +89,9 @@ beatsPerMin="125">
 		<key row="880" value="4.000000" interpolation="0" />
 		<key row="1104" value="5.000000" interpolation="0" />
 		<key row="1324" value="6.000000" interpolation="0" />
+		<key row="1542" value="5.000000" interpolation="0" />
+		<key row="1766" value="7.000000" interpolation="0" />
+		<key row="1977" value="8.000000" interpolation="0" />
 	</track>
 </tracks>
 	</rootElement>

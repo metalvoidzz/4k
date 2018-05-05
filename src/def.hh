@@ -48,8 +48,8 @@ static const char* error_msg[] = {
 #endif
 
 
-#define WIDTH	1280
-#define HEIGHT	720
+#define WIDTH	1366
+#define HEIGHT	768
 
 
 namespace DEMO

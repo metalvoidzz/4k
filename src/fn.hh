@@ -13,18 +13,27 @@
 
 namespace DEMO
 {
+	__forceinline void Cleanup()
+	{
+		// Resolves screen resolution issue when playing through wine
+		ChangeDisplaySettings(0, 0);
+		ShowCursor(1);
+	}
+
 #ifdef DEBUG_BUILD
 	void __fastcall Die(int8_t cause)
 	{
 		if (cause != -1)
 			MessageBox(NULL, error_msg[cause], "Error", MB_OK);
 
+		Cleanup();
 		exit(0);
 	}
 #else
-	__forceinline void __fastcall Die()
+	void __fastcall Die()
 	{
 		ExitProcess(0);
+		Cleanup();
 	}
 #endif
 };

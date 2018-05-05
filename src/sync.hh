@@ -133,8 +133,10 @@ __forceinline void __fastcall inter_sync(uint16_t index)
 	float it = sync_data[index].time + 1;
 
 	// Interpolate until row of next value reached or end was hit
-	while (it < sync_data[i].time && it < NUM_ROWS)
+	while (it < NUM_ROWS)
 	{
+		if (inter != 0 && it == sync_data[i].time) break;
+
 #ifdef USED_INTER_LINEAR
 		if (inter == INTER_LINEAR) {
 			float t = (it - sync_data[index].time) / (sync_data[i].time  - sync_data[index].time);
@@ -176,6 +178,7 @@ __forceinline void __fastcall PrecalcSyncData()
 
 	/*for (int r = 0; r < NUM_ROWS; r++)
 	{
+		printf("Row %i  ", r);
 		for (int t = 0; t < NUM_TRACKS; t++)
 		{
 			printf("%f ", data[t][r]);

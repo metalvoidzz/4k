@@ -4,16 +4,11 @@
 
 uniform float un[6];
 
-float u_time = un[0];
-float u_alpha = un[1];
-float u_x = un[2];
-float u_y = un[3];
-float u_z = un[4];
 // account for .000001 difference
 float u_scene = round(un[5]);
 
-#define WIDTH 1280
-#define HEIGHT 720
+#define WIDTH 1366
+#define HEIGHT 768
 #define AMBIENCE 300
 
 float MAX_DIST;
@@ -75,16 +70,6 @@ float fbm( vec3 p )
   return f;
 }
 
-mat3 rotateX(float theta) {
-    float c = cos(theta);
-    float s = sin(theta);
-    return mat3(
-        vec3(1, 0, 0),
-        vec3(0, c, -s),
-        vec3(0, s, c)
-    );
-}
-
 mat3 rotateY(float theta) {
     float c = cos(theta);
     float s = sin(theta);
@@ -92,16 +77,6 @@ mat3 rotateY(float theta) {
         vec3(c, 0, s),
         vec3(0, 1, 0),
         vec3(-s, 0, c)
-    );
-}
-
-mat3 rotateZ(float theta) {
-    float c = cos(theta);
-    float s = sin(theta);
-    return mat3(
-        vec3(c, -s, 0),
-        vec3(s, c, 0),
-        vec3(0, 0, 1)
     );
 }
 
@@ -147,8 +122,12 @@ float cableSDF(vec3 p)
 	return length(max(abs(p-vec3(cos(p.z*2)*.5,2+cos(p.z)*.3, 0))-vec3(.1,.02, 100),vec3(.0)));
 }
 
+float cylinderSDF( vec3 p, vec3 c )
+{
+	return length(p.xz-c.xy)-c.z;
+}
+
 vec3 gp;
-float gi_x, gi_y, gi_z;
 vec2 map(vec3 p)
 {
 	// Rotation
@@ -162,32 +141,33 @@ vec2 map(vec3 p)
 	
 	// Floating reflective-sphere-thingy
 	
-	vec3 p1 = p;
-	pMod1(p1.x, 24);
+	vec3 p1 = vec3(p.x-13, p.y+1, p.z);
+	pMod1(p1.x, 26);
 	pMod1(p1.z, 24);
 	pMod1(p1.y, 24);
 	
-	p1 = vec3(p1.x, p1.y+1, p1.z);
+	vec2 tr = vec2(cylinderSDF(p1, vec3(0., 0., 0.8)), 100.0);
+	vec2 tr1 = vec2(cubeSDF(p1, vec3(2, 0.2, 20)), 4.0);
 	
-	vec2 fl = fOpU(vec2(sphereSDF(p1, 3.0), 3.0), vec2(cubeSDF(p1, vec3(6, 0.25, 6)), 4.0));
+	vec2 fl = fOpU(fOpU(fOpU(vec2(sphereSDF(p1, 3.0), 3.0), vec2(cubeSDF(p1, vec3(6, 0.25, 6)), 4.0)), tr), tr1);
 	
 	// Cable
 	
-	vec2 cab = vec2(cableSDF(vec3(p1.x, p1.y, p1.z)), 2.0);
+	vec2 cab = vec2(cableSDF(vec3(p1.x, p1.y, p1.z)), 5.0);
 	
-	if(u_scene == 0 || u_scene == 2 || u_scene == 4 || u_scene == 6)
+	if(mod(u_scene, 2.) == 0. || u_scene == 7.)
 	{
-		MAX_DIST = 300;
+		MAX_DIST = 280;
 		
-		gi_z = pModInterval1(p.z, 18, 0, 40);
+		pModInterval1(p.z, 18, 0, 40);
 		
 		// Ground plane
 		
-		vec2 gp = fOpU(
+		vec2 gr = fOpU(
 			vec2(
 				opSub(
 					cubeSDF(vec3(p.x, p.y, p.z), vec3(8, 02, 6)),
-					cubeSDF(vec3(p.x, p.y, p.z), vec3(10.2, 0.2, 8))
+					cubeSDF(vec3(p.x, p.y, p.z), vec3(10.2, 0.2, 10))
 				),
 				1.0
 			),
@@ -196,8 +176,7 @@ vec2 map(vec3 p)
 		
 		// Floor / Ceiling
 		vec2 bounds = fOpU(
-			//vec2(cubeSDF(vec3(p.x, p.y, p.z), vec3(10, 0.1, 8)), 1.0),
-			gp,
+			gr,
 			vec2(cubeSDF(vec3(p.x, p.y-8, p.z), vec3(10.2, 0.2, 12)), 1.0)
 		);
 		
@@ -210,28 +189,15 @@ vec2 map(vec3 p)
 			)
 		);
 		
-		// "Bridge"
+		pMod1(p.x, 20);
+		pMod1(p.y, 10);
 		
-		vec2 brid = fOpU(
-			vec2(
-				cubeSDF(vec3(p.x, p.y, p.z-16), vec3(5.2, 0.2, 8)),
-				1.0
-			),
-			vec2(
-				cubeSDF(vec3(p.x, p.y, p.z+16), vec3(5.2, 0.2, 8)),
-				1.0
-			)
-		);
-		
-		gi_x = pMod1(p.x, 20);
-		gi_y = pMod1(p.y, 10);
-		
-		s = fOpU(brid, bounds);
+		s = bounds;
 
 		// The part where the scenes merge together
 		
-		if(u_scene == 5) s = fOpU(s, fl);
-	}else if(u_scene == 1 || u_scene == 3 || u_scene == 5) {
+		if(u_scene > 6) s = fOpU(s, fOpU(fl, cab));
+	}else {
 		MAX_DIST = 600;
 
 		s = fOpU(fl, cab);
@@ -274,7 +240,7 @@ vec3 doColor(in vec3 sp, in vec3 rd, in vec3 sn, in vec3 lp, vec3 base)
 	float distlpsp = max(length(ld), 0.001);
 	ld /= distlpsp;
 	vec3 color;
-    float r = 0.0, w = 1.0, d;    
+    float r = 0.0, w = 1.0, d;
     for (float i = 1.0; i < 5.1; i++)
 	{
         d = i/5;
@@ -282,7 +248,10 @@ vec3 doColor(in vec3 sp, in vec3 rd, in vec3 sn, in vec3 lp, vec3 base)
         w *= 0.5;
     }
     float ao = 1.0-clamp(r,0.0,1.0);
-	vec3 li = clamp( 0.5 + 0.5 * sn.y, 0.0, 1.0 )*vec3(0.16,0.20,0.28)*ao;
+	vec3 sunDir = vec3(0.1, 0.1, 0.9);
+	//float sun = clamp( dot( sn, sunDir ), 0.0, 1.0 );
+	//float ind = clamp( dot( sn, normalize(sunDir*vec3(-1.0,0.0,-1.0)) ), 0.0, 1.0 );
+	vec3 li = clamp( 0.5 + 0.5 * sn.y, 0.0, 1.0 )*vec3(0.16,0.20,0.28)*ao;//+ind;
 	color = li * base + (pow(max( dot( reflect(-ld, sn), -rd ), 0.0 ), 8.)*color*.4);
 	color *= pow( clamp(dot(sn, rd) + 1., .0, 1.), 1.)*max( dot(sn, ld), 0.0)*min(1./(distlpsp), 1)*AMBIENCE;
 	
@@ -293,14 +262,14 @@ void main()
 {
 	vec2 uv = (gl_FragCoord.xy - vec2(WIDTH, HEIGHT)*.5) / HEIGHT;
     vec3 rd = normalize(vec3(uv, 1.0));
-    vec3 ro = vec3(u_x, u_y, u_z);
+    vec3 ro = vec3(un[2], un[3], un[4]);
 	vec3 lp = vec3(ro.x, ro.y, ro.z);
 	
-    vec2 t = trace(ro, rd, 1600);
+    vec2 t = trace(ro, rd, 1400);
 	
 	if (t.x > MAX_DIST - 0.0001)
 	{
-		gl_FragColor = vec4(stars(rd)-u_alpha, 0.0);
+		gl_FragColor = vec4(stars(rd)-un[1], 0.0);
 		return;
 	}
 
@@ -313,7 +282,7 @@ void main()
 	{
 		// Wall material
 		
-		//vec3 c1 = vec3(cos(sin(u_time))*2, 0.0, clamp(sin(u_time)*.2, 0.0, 1.0));
+		//vec3 c1 = vec3(cos(sin(un[0]))*2, 0.0, clamp(sin(un[0])*.2, 0.0, 1.0));
 		vec3 c1 = vec3(0.4, 0.1, 0.2);
 		vec3 c2 = vec3(0.6);
 		
@@ -323,7 +292,7 @@ void main()
 			step(
 				1.,
 				abs(gp.y + 0.75 * -5.0
-				+ sin(gp.z * 0.20 + (u_scene == 2 || u_scene == 4 ? u_time : 0) * .8) - fbm(gp * 1.5))
+				+ sin(gp.z * 0.20 + (u_scene > 0 ? un[0] : 0) * .8) - fbm(gp * 1.5))
 			)
 		);
 		
@@ -332,17 +301,21 @@ void main()
 		color = vec3(0.2, 0.2, 0.2);
 		shiny = 0.6;
 	}else if(t.y == 2.0) {
-		// Floor/cable material
+		// Floor material
 		color = vec3(0.1, 0.3, 0.2);
 		shiny = 0.09;
 	}else if(t.y == 3.0) {
-		float ti = u_scene >= 3 ? u_time : 0;
-		// Sphere material
-		color = vec3(0.2, clamp(sin(ti), 0.0, 0.7), 0.5);
+		// Sphere material, should be roughly synced to lead instrument
+		float r = (u_scene >= 3 && u_scene != 8) ? un[0] : 0;
+		color = vec3(0.1, clamp(sin(r), 0.0, 0.7), 0.2);
 		shiny = 2.5;
 	}else if(t.y == 4.0) {
 		color = vec3(0.01);
 		shiny = 1;
+	}else if(t.y == 5.0) {
+		// Cable material
+		color = vec3(0.1, 0.2, 0.2);
+		shiny = 0;
 	}
 	
 	float fog = smoothstep(0., 1.1, t.x/MAX_DIST);
@@ -351,7 +324,7 @@ void main()
 	// Reflection //
     
     rd = reflect(rd, sn);
-    t = trace(ro +  rd*.01, rd, 1200);
+    t = trace(ro +  rd*.01, rd, 750);
     ro += rd*t.x;
     sn = getNormal(ro);
     sceneColor += doColor(ro, rd, sn, lp, color)*shiny;
@@ -361,9 +334,9 @@ void main()
 	// Scanlines
 	sceneColor -= sin(uv.y*1100)*0.007;
 	// Fog
-    sceneColor = mix(sceneColor, vec3(0), fog);
+	sceneColor = mix(sceneColor, vec3(0), fog);
 	// Grain
-	sceneColor = mix(sceneColor, vec3(fract(sin(dot(uv.xy, vec2(17.0,180.)+u_time))* 2500)), 0.002);
+	sceneColor = mix(sceneColor, vec3(fract(sin(dot(uv.xy, vec2(17.0,180.)+un[0]))* 2500)), 0.002);
 	
-	gl_FragColor = vec4(sqrt(clamp(sceneColor, 0.0, 1.0))-u_alpha, 1.0);
+	gl_FragColor = vec4(sqrt(clamp(sceneColor, 0.0, 1.0))-un[1], 1.0);
 }
